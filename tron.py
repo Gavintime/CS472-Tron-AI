@@ -40,6 +40,11 @@ def draw():
         print('Player red wins!')
         return
 
+
+    if inside(p1head) and inside(p2head) and p1head == p2head:
+        print('Tie!')
+        return
+
     p1body.add(p1head)
     p2body.add(p2head)
 
