@@ -39,12 +39,12 @@ def movep2(x, y):
 
 
 def inside(head):
-    "Return True if head inside screen."
+    # Return True if head inside screen.
     return -200 < head.x < 200 and -200 < head.y < 200
 
 
 def draw():
-    "Advance players and draw game."
+    # Advance players and draw game.
     p1xy.move(p1aim)
     p1head = p1xy.copy()
 
