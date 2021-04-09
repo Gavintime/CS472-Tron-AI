@@ -98,7 +98,7 @@ def draw():
     ontimer(draw, DELAY)
 
 
-setup(420, 420, 370, 0)
+setup(405, 405, 370, 0)
 
 hideturtle()
 tracer(False)
