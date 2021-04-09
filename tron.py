@@ -12,11 +12,6 @@ Exercises
 from turtle import *
 from freegames import square, vector
 
-UP = 1
-DOWN = 2
-RIGHT = 3
-LEFT = 4
-
 p1xy = vector(-100, 0)
 p1aim = vector(4, 0)
 p1body = set()
@@ -25,9 +20,28 @@ p2xy = vector(100, 0)
 p2aim = vector(-4, 0)
 p2body = set()
 
+
+def movep1(x, y):
+
+    # ignore moves that go reverse
+    if x == p1aim.x or y == p1aim.y: return
+
+    p1aim.x = x
+    p1aim.y = y
+
+def movep2(x, y):
+
+    # ignore moves that go reverse
+    if x == p2aim.x or y == p2aim.y: return
+
+    p2aim.x = x
+    p2aim.y = y
+
+
 def inside(head):
     "Return True if head inside screen."
     return -200 < head.x < 200 and -200 < head.y < 200
+
 
 def draw():
     "Advance players and draw game."
@@ -58,17 +72,8 @@ def draw():
     update()
     ontimer(draw, 100)
 
-#setup(420, 420, 370, 0)
 
-
-def movep1(x, y):
-    p1aim.x = x
-    p1aim.y = y
-
-def movep2(x, y):
-    p2aim.x = x
-    p2aim.y = y
-
+setup(420, 420, 370, 0)
 
 hideturtle()
 tracer(False)
