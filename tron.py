@@ -20,11 +20,32 @@ p2xy = vector(100, 0)
 p2aim = vector(-4, 0)
 p2body = set()
 
+
 SPEED = 4
+DELAY = 100
+
+
+def movep1(x, y):
+
+    # ignore moves that go reverse
+    if x == p1aim.x or y == p1aim.y: return
+
+    p1aim.x = x
+    p1aim.y = y
+
+def movep2(x, y):
+
+    # ignore moves that go reverse
+    if x == p2aim.x or y == p2aim.y: return
+
+    p2aim.x = x
+    p2aim.y = y
+
 
 def inside(head):
     # Return True if head inside screen.
     return -200 < head.x < 200 and -200 < head.y < 200
+
 
 def draw():
     # Advance players and draw game.
@@ -42,6 +63,7 @@ def draw():
         print('Player red wins!')
         return
 
+
     if inside(p1head) and inside(p2head) and p1head == p2head:
         print('Tie!')
         return
@@ -52,19 +74,10 @@ def draw():
     square(p1xy.x, p1xy.y, 3, 'red')
     square(p2xy.x, p2xy.y, 3, 'blue')
     update()
-    ontimer(draw, 100)
-
-# setup(420, 420, 370, 0)
+    ontimer(draw, DELAY)
 
 
-def movep1(x, y):
-    p1aim.x = x
-    p1aim.y = y
-
-def movep2(x, y):
-    p2aim.x = x
-    p2aim.y = y
-
+setup(420, 420, 370, 0)
 
 hideturtle()
 tracer(False)
