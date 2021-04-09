@@ -8,21 +8,40 @@ Exercises
 4. How would you create a computer player?
 
 """
-
 from turtle import *
 from freegames import square, vector
 
-p1xy = vector(-100, 0)
-p1aim = vector(4, 0)
+SPEED = 4
+DELAY = 100
+STARTLOCATION = 100
+
+p1xy = vector(-STARTLOCATION, 0)
+p1aim = vector(SPEED, 0)
 p1body = set()
 
-p2xy = vector(100, 0)
-p2aim = vector(-4, 0)
+p2xy = vector(STARTLOCATION, 0)
+p2aim = vector(-SPEED, 0)
 p2body = set()
 
 
-SPEED = 4
-DELAY = 100
+
+
+
+def movep1(x, y):
+
+    # ignore moves that go reverse
+    if x == p1aim.x or y == p1aim.y: return
+
+    p1aim.x = x
+    p1aim.y = y
+
+def movep2(x, y):
+
+    # ignore moves that go reverse
+    if x == p2aim.x or y == p2aim.y: return
+
+    p2aim.x = x
+    p2aim.y = y
 
 
 def movep1(x, y):
@@ -44,7 +63,9 @@ def movep2(x, y):
 
 def inside(head):
     # Return True if head inside screen.
-    return -200 < head.x < 200 and -200 < head.y < 200
+    #size is 200
+    playSize = 200
+    return -playSize < head.x < playSize and -playSize < head.y < playSize
 
 
 def draw():
