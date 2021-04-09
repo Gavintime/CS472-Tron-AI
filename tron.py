@@ -20,28 +20,11 @@ p2xy = vector(100, 0)
 p2aim = vector(-4, 0)
 p2body = set()
 
-
-def movep1(x, y):
-
-    # ignore moves that go reverse
-    if x == p1aim.x or y == p1aim.y: return
-
-    p1aim.x = x
-    p1aim.y = y
-
-def movep2(x, y):
-
-    # ignore moves that go reverse
-    if x == p2aim.x or y == p2aim.y: return
-
-    p2aim.x = x
-    p2aim.y = y
-
+SPEED = 4
 
 def inside(head):
     # Return True if head inside screen.
     return -200 < head.x < 200 and -200 < head.y < 200
-
 
 def draw():
     # Advance players and draw game.
@@ -59,7 +42,6 @@ def draw():
         print('Player red wins!')
         return
 
-
     if inside(p1head) and inside(p2head) and p1head == p2head:
         print('Tie!')
         return
@@ -72,22 +54,31 @@ def draw():
     update()
     ontimer(draw, 100)
 
+# setup(420, 420, 370, 0)
 
-setup(420, 420, 370, 0)
+
+def movep1(x, y):
+    p1aim.x = x
+    p1aim.y = y
+
+def movep2(x, y):
+    p2aim.x = x
+    p2aim.y = y
+
 
 hideturtle()
 tracer(False)
 listen()
 
-onkey(lambda: movep1(0, 4), 'w')
-onkey(lambda: movep1(0, -4), 's')
-onkey(lambda: movep1(-4, 0), 'a')
-onkey(lambda: movep1(4, 0), 'd')
+onkey(lambda: movep1(0, SPEED), 'w')
+onkey(lambda: movep1(0, -SPEED), 's')
+onkey(lambda: movep1(-SPEED, 0), 'a')
+onkey(lambda: movep1(SPEED, 0), 'd')
 
-onkey(lambda: movep2(0, 4), 'i')
-onkey(lambda: movep2(0, -4), 'k')
-onkey(lambda: movep2(-4, 0), 'j')
-onkey(lambda: movep2(4, 0), 'l')
+onkey(lambda: movep2(0, SPEED), 'i')
+onkey(lambda: movep2(0, -SPEED), 'k')
+onkey(lambda: movep2(-SPEED, 0), 'j')
+onkey(lambda: movep2(SPEED, 0), 'l')
 
 draw()
 done()
