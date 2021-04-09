@@ -8,9 +8,14 @@ Exercises
 4. How would you create a computer player?
 
 """
-from distutils.core import setup
+
 from turtle import *
 from freegames import square, vector
+
+UP = 1
+DOWN = 2
+RIGHT = 3
+LEFT = 4
 
 p1xy = vector(-100, 0)
 p1aim = vector(4, 0)
@@ -46,15 +51,33 @@ def draw():
     square(p1xy.x, p1xy.y, 3, 'red')
     square(p2xy.x, p2xy.y, 3, 'blue')
     update()
-    ontimer(draw, 90)
+    ontimer(draw, 100)
 
-setup(420, 420, 370, 10)
+#setup(420, 420, 370, 0)
+
+
+def movep1(x, y):
+    p1aim.x = x
+    p1aim.y = y
+
+def movep2(x, y):
+    p2aim.x = x
+    p2aim.y = y
+
+
 hideturtle()
 tracer(False)
 listen()
-onkey(lambda: p1aim.rotate(90), 'a')
-onkey(lambda: p1aim.rotate(-90), 'd')
-onkey(lambda: p2aim.rotate(90), 'j')
-onkey(lambda: p2aim.rotate(-90), 'l')
+
+onkey(lambda: movep1(0, 4), 'w')
+onkey(lambda: movep1(0, -4), 's')
+onkey(lambda: movep1(-4, 0), 'a')
+onkey(lambda: movep1(4, 0), 'd')
+
+onkey(lambda: movep2(0, 4), 'i')
+onkey(lambda: movep2(0, -4), 'k')
+onkey(lambda: movep2(-4, 0), 'j')
+onkey(lambda: movep2(4, 0), 'l')
+
 draw()
 done()
