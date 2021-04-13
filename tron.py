@@ -1,30 +1,39 @@
-"""Tron, classic arcade game.
-
-Exercises
-
-1. Make the tron players faster/slower.
-2. Stop a tron player from running into itself.
-3. Allow the tron player to go around the edge of the screen.
-4. How would you create a computer player?
-
 """
-
+    Tron, classic arcade game.
+"""
 from turtle import *
 from freegames import square, vector
 
+
+SNAKE_SPEED = 4
+
+# Number of milliseconds between a game state/frame advance
+# effectively inverse speed of how fast game advances, lower numbers give faster "frame rate"
+DELAY = 25
+
+GRID_SIZE = 200
+WINDOW_SIZE = GRID_SIZE * 2 + 8
+
+
+"""
+    p1xy: current xy location of head
+    p1aim: current direction of head as a vector
+    p1body: set of vectors of previous head locations, the body of the snake
+"""
 p1xy = vector(-100, 0)
-p1aim = vector(4, 0)
+p1aim = vector(SNAKE_SPEED, 0)
 p1body = set()
 
 p2xy = vector(100, 0)
-p2aim = vector(-4, 0)
+p2aim = vector(-SNAKE_SPEED, 0)
 p2body = set()
 
 
-SPEED = 4
-DELAY = 100
-
-
+"""
+    GAME INPUT FUNCTION
+    Updates the direction of the red snake
+    Input: Vector of direction to move p1
+"""
 def movep1(x, y):
 
     # ignore moves that go reverse
@@ -32,6 +41,7 @@ def movep1(x, y):
 
     p1aim.x = x
     p1aim.y = y
+
 
 def movep2(x, y):
 
@@ -42,56 +52,87 @@ def movep2(x, y):
     p2aim.y = y
 
 
+"""
+    Checks if the given snakes head is within the playable grid bounds (GRID_SIZExGRID_SIZE)
+    Input: x,y coordinates of the given snakes head
+    Output: True if the snakes head is within GRID_SIZE bounds, False otherwise
+"""
 def inside(head):
     # Return True if head inside screen.
-    return -200 < head.x < 200 and -200 < head.y < 200
+    return -GRID_SIZE < head.x < GRID_SIZE \
+           and -GRID_SIZE < head.y < GRID_SIZE
 
 
+# Advance Each snake and draw the game, recursively calls itself till game ends
 def draw():
-    # Advance players and draw game.
+
+    # increment red's head in the direction of its current aim
     p1xy.move(p1aim)
     p1head = p1xy.copy()
 
     p2xy.move(p2aim)
     p2head = p2xy.copy()
 
+    # Blue wins if the red snake hits the grid bounds, or either of the bodies
     if not inside(p1head) or p1head in p2body or p1head in p1body:
         print('Player blue wins!')
         return
 
+    # Red wins if the Blue snake ...
     if not inside(p2head) or p2head in p1body or p2head in p2body:
         print('Player red wins!')
         return
 
-
+    # End game as a tie if both snakes heads try occupying the same space
+    # TODO: tie if both players die in the same game state
     if inside(p1head) and inside(p2head) and p1head == p2head:
         print('Tie!')
         return
 
+    # Add the current
     p1body.add(p1head)
     p2body.add(p2head)
 
     square(p1xy.x, p1xy.y, 3, 'red')
     square(p2xy.x, p2xy.y, 3, 'blue')
+
+    # Update the turtle to draw
     update()
+
+    # Goto next game state
     ontimer(draw, DELAY)
 
 
-setup(405, 405, 370, 0)
+def main():
+    # setup screen space dimensions, not synced with playable grid size
+    setup(WINDOW_SIZE, WINDOW_SIZE, 370, 0)
 
-hideturtle()
-tracer(False)
-listen()
+    # hide the debug turtle drawer
+    hideturtle()
 
-onkey(lambda: movep1(0, SPEED), 'w')
-onkey(lambda: movep1(0, -SPEED), 's')
-onkey(lambda: movep1(-SPEED, 0), 'a')
-onkey(lambda: movep1(SPEED, 0), 'd')
+    # this prevents the turtle draw drawing every pixel synchronously,
+    # the turtle will be updated at the end of each game state
+    tracer(False)
 
-onkey(lambda: movep2(0, SPEED), 'i')
-onkey(lambda: movep2(0, -SPEED), 'k')
-onkey(lambda: movep2(-SPEED, 0), 'j')
-onkey(lambda: movep2(SPEED, 0), 'l')
+    # enable user input listening, this should be disabled once AI testing starts
+    listen()
 
-draw()
-done()
+    # Red Inputs, standard wsad controls for North South West East
+    onkey(lambda: movep1(0, SNAKE_SPEED), 'w')
+    onkey(lambda: movep1(0, -SNAKE_SPEED), 's')
+    onkey(lambda: movep1(-SNAKE_SPEED, 0), 'a')
+    onkey(lambda: movep1(SNAKE_SPEED, 0), 'd')
+
+    # Blue Inputs, same as reds inputs but with ikjl (vim like)
+    onkey(lambda: movep2(0, SNAKE_SPEED), 'i')
+    onkey(lambda: movep2(0, -SNAKE_SPEED), 'k')
+    onkey(lambda: movep2(-SNAKE_SPEED, 0), 'j')
+    onkey(lambda: movep2(SNAKE_SPEED, 0), 'l')
+
+    # Begin game draw loop
+    draw()
+    done()
+
+
+# this just tells python to run the main method
+if __name__ == "__main__": main()
