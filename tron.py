@@ -23,11 +23,11 @@ WINDOW_SIZE = GRID_SIZE * 2 + 8
 """
 p1xy = vector(-100, 0)
 p1aim = vector(SNAKE_SPEED, 0)
-p1body = set()
 
 p2xy = vector(100, 0)
 p2aim = vector(-SNAKE_SPEED, 0)
-p2body = set()
+
+p_bodies = set()
 
 
 """
@@ -74,30 +74,28 @@ def draw():
     p2xy.move(p2aim)
     p2head = p2xy.copy()
 
-    # There is a tie if both snakes hit something at the same time
-    if (not inside(p1head) and not inside(p2head)) or ((p1head in p2body or p1head in p1body) and
-                                                       (p2head in p1body or p2head in p2body)):
+    # There is a tie if both snakes hit something at the same time or heads collide
+    if (not inside(p1head) and not inside(p2head)) \
+            or ((p1head in p_bodies)
+            and (p2head in p_bodies)) \
+            and p1head == p2head:
+
         print('Tie!')
         return
 
     # Blue wins if the red snake hits the grid bounds, or either of the bodies
-    if not inside(p1head) or p1head in p2body or p1head in p1body:
+    if not inside(p1head) or p1head in p_bodies:
         print('Player blue wins!')
         return
 
     # Red wins if the Blue snake ...
-    if not inside(p2head) or p2head in p1body or p2head in p2body:
+    if not inside(p2head) or p2head in p_bodies:
         print('Player red wins!')
         return
 
-    # End game as a tie if both snakes heads try occupying the same space
-    if inside(p1head) and inside(p2head) and p1head == p2head:
-        print('Tie!')
-        return
-
-    # Add the current
-    p1body.add(p1head)
-    p2body.add(p2head)
+    # Add the current players heads
+    p_bodies.add(p1head)
+    p_bodies.add(p2head)
 
     square(p1xy.x, p1xy.y, 3, 'red')
     square(p2xy.x, p2xy.y, 3, 'blue')
