@@ -11,6 +11,7 @@ SNAKE_SPEED = 4
 # effectively inverse speed of how fast game advances, lower numbers give faster "frame rate"
 DELAY = 25
 
+# this needs to be divisible by SNAKE_SPEED for grids to align properly
 GRID_SIZE = 200
 WINDOW_SIZE = GRID_SIZE * 2 + 8
 
