@@ -74,8 +74,9 @@ def draw():
     p2xy.move(p2aim)
     p2head = p2xy.copy()
 
-    # There is a tie if both snakes hit the wall at the same time
-    if not inside(p1head) and not inside(p2head):
+    # There is a tie if both snakes hit something at the same time
+    if (not inside(p1head) and not inside(p2head)) or ((p1head in p2body or p1head in p1body) and
+                                                       (p2head in p1body or p2head in p2body)):
         print('Tie!')
         return
 
