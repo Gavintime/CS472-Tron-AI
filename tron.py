@@ -29,7 +29,8 @@ p2xy = vector(100, 0)
 p2aim = vector(-SNAKE_SPEED, 0)
 p2body = set()
 
-
+p1ai = False
+p2ai = False
 """
     GAME INPUT FUNCTION
     Updates the direction of the red snake
@@ -134,6 +135,9 @@ def main():
     onkey(lambda: movep2(0, -SNAKE_SPEED), 'k')
     onkey(lambda: movep2(-SNAKE_SPEED, 0), 'j')
     onkey(lambda: movep2(SNAKE_SPEED, 0), 'l')
+
+    #TODO: expressions for pulling AI movement choice per frame
+    # Method to fetch one of four input directions from a persistent queue (or no input direction)
 
     # Begin game draw loop
     draw()
