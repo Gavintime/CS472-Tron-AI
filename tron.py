@@ -74,6 +74,11 @@ def draw():
     p2xy.move(p2aim)
     p2head = p2xy.copy()
 
+    # There is a tie if both snakes hit the wall at the same time
+    if not inside(p1head) and not inside(p2head):
+        print('Tie!')
+        return
+
     # Blue wins if the red snake hits the grid bounds, or either of the bodies
     if not inside(p1head) or p1head in p2body or p1head in p1body:
         print('Player blue wins!')
@@ -85,7 +90,6 @@ def draw():
         return
 
     # End game as a tie if both snakes heads try occupying the same space
-    # TODO: tie if both players die in the same game state
     if inside(p1head) and inside(p2head) and p1head == p2head:
         print('Tie!')
         return
