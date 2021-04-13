@@ -77,9 +77,8 @@ def draw():
 
     # There is a tie if both snakes hit something at the same time or heads collide
     if (not inside(p1head) and not inside(p2head)) \
-            or ((p1head in p_bodies)
-            and (p2head in p_bodies)) \
-            and p1head == p2head:
+            or ((p1head in p_bodies) and (p2head in p_bodies)) \
+            or p1head == p2head:
 
         print('Tie!')
         return
@@ -134,7 +133,7 @@ def main():
     onkey(lambda: movep2(-SNAKE_SPEED, 0), 'j')
     onkey(lambda: movep2(SNAKE_SPEED, 0), 'l')
 
-    #TODO: expressions for pulling AI movement choice per frame
+    # TODO: expressions for pulling AI movement choice per frame
     # Method to fetch one of four input directions from a persistent queue (or no input direction)
 
     # Begin game draw loop
