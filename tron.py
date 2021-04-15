@@ -27,11 +27,11 @@ p2aim = vector(-SNAKE_SPEED, 0)
 # numpy 2d GRID_TIMES x GRID_TIMES array, prefilled with 0s
 # when a body piece is added its location is set to 1
 # the boarder is set to 3(true) and is also a "body"
-p_bodies = np.zeros((GRID_SIZE+1, GRID_SIZE+1), dtype=bool)
+p_bodies = np.zeros((GRID_SIZE, GRID_SIZE), dtype=bool)
 for col in range(len(p_bodies)):
     for row in range(len(p_bodies[col])):
-        if row == 4 or row == GRID_SIZE-4 or col == 0 or col == GRID_SIZE-4:  # check this, graphically it is correct
-            p_bodies[col][row] = 3
+        if row == 0 or row == GRID_SIZE-4 or col == 0 or col == GRID_SIZE-4:  # check this, graphically it is correct
+            p_bodies[col][row] = True
 
 
 def draw_square(t, x, y):
@@ -52,7 +52,7 @@ def draw_square(t, x, y):
 
 
 def print_grid(grid):
-    for y in range(GRID_SIZE-4, 1, -4):
+    for y in range(GRID_SIZE-4, -1, -4):
         for x in range(0, GRID_SIZE, 4):
             if grid[x,y]: print('0', end='')
             else: print('.', end='')
@@ -81,10 +81,6 @@ def movep2(x, y):
     Input: x,y coordinates of the given snakes head
     Output: True if the snakes head is within GRID_SIZE bounds, False otherwise
 """
-def inside(head):
-    # Return True if head inside screen.
-    return 0 <= head.x < GRID_SIZE \
-           and 0 <= head.y < GRID_SIZE
 
 
 def draw(screen, t_red, t_blue, t_draw):
@@ -113,11 +109,11 @@ def draw(screen, t_red, t_blue, t_draw):
     blue_alive = True
 
     # Check if Red died
-    if not inside(p1head) or p_bodies[p1head.x, p1head.y]:
+    if p_bodies[p1head.x, p1head.y]:
         red_alive = False
 
     # Check if Blue Died
-    if not inside(p2head) or p_bodies[p2head.x, p2head.y]:
+    if p_bodies[p2head.x, p2head.y]:
         blue_alive = False
 
     # end game if either player is dead or hit each other
@@ -138,8 +134,8 @@ def draw(screen, t_red, t_blue, t_draw):
         return
 
     # Add the current players heads to the body array
-    p_bodies[p1head.x, p1head.y] = 1
-    p_bodies[p2head.x, p2head.y] = 2
+    p_bodies[p1head.x, p1head.y] = True
+    p_bodies[p2head.x, p2head.y] = True
 
     # update screen and goto next game state
     screen.update()
@@ -187,11 +183,11 @@ def main():
     t_draw.pendown()
     t_draw.forward(GRID_SIZE)
     t_draw.setheading(90)
-    t_draw.forward(GRID_SIZE)
+    t_draw.forward(GRID_SIZE-4)
     t_draw.setheading(180)
     t_draw.forward(GRID_SIZE)
     t_draw.setheading(270)
-    t_draw.forward(GRID_SIZE)
+    t_draw.forward(GRID_SIZE-4)
     t_draw.pensize(1)
 
 
