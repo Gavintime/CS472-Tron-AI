@@ -26,7 +26,12 @@ p2aim = vector(-SNAKE_SPEED, 0)
 
 # numpy 2d GRID_TIMES x GRID_TIMES array, prefilled with 0s
 # when a body piece is added its location is set to 1
-p_bodies = np.zeros((GRID_SIZE, GRID_SIZE), dtype=bool)
+# the boarder is set to 3(true) and is also a "body"
+p_bodies = np.zeros((GRID_SIZE+1, GRID_SIZE+1), dtype=bool)
+for col in range(len(p_bodies)):
+    for row in range(len(p_bodies[col])):
+        if row == 4 or row == GRID_SIZE-4 or col == 0 or col == GRID_SIZE-4:  # check this, graphically it is correct
+            p_bodies[col][row] = 3
 
 
 def draw_square(t, x, y):
