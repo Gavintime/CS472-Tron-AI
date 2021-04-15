@@ -5,12 +5,13 @@ import threading
 from turtle import Screen, Turtle, done, mode, setworldcoordinates
 import numpy as np
 from freegames import vector
+from ai_inputs import *
 
 SNAKE_SPEED = 4
 
 # Number of milliseconds between a game state/frame advance
 # effectively inverse speed of how fast game advances, lower numbers give faster "frame rate"
-DELAY = 10
+DELAY = 50
 
 # this needs to be divisible by SNAKE_SPEED for grids to align properly
 GRID_SIZE = 400
@@ -28,6 +29,7 @@ p2aim = vector(-SNAKE_SPEED, 0)
 # when a body piece is added its location is set to 1
 # the boarder is set to 3(true) and is also a "body"
 p_bodies = np.zeros((GRID_SIZE, GRID_SIZE), dtype=bool)
+# add grid borders to p_bodies
 for col in range(len(p_bodies)):
     for row in range(len(p_bodies[col])):
         if row == 0 or row == GRID_SIZE-4 or col == 0 or col == GRID_SIZE-4:  # check this, graphically it is correct
@@ -57,6 +59,8 @@ def print_grid(grid):
             if grid[x,y]: print('0', end='')
             else: print('.', end='')
         print()
+
+    print(p1xy, p2xy)
 
 
 """ GAME INPUT FUNCTION
@@ -102,8 +106,6 @@ def draw(screen, t_red, t_blue, t_draw):
     t_red.setpos(p1xy.x, p1xy.y)
     t_blue.setpos(p2xy.x, p2xy.y)
 
-
-
     # alive flags
     red_alive = True
     blue_alive = True
@@ -132,6 +134,8 @@ def draw(screen, t_red, t_blue, t_draw):
         print("Red Wins!")
         print_grid(p_bodies)
         return
+
+    print(dist_west(p1head.x, p1head.y, p_bodies))
 
     # Add the current players heads to the body array
     p_bodies[p1head.x, p1head.y] = True
