@@ -7,11 +7,19 @@ import numpy as np
 from freegames import vector
 from ai_inputs import *
 
+# when disabled, no turtle graphics are drawn, should be used when training AI
+GRAPHICS_ENABLE = True
+
+# controls if ai is enabled/ human controled
+# TODO: controls on who to set for each AI
+AI_RED = False
+AI_BLUE = False
+
 SNAKE_SPEED = 4
 
 # Number of milliseconds between a game state/frame advance
 # effectively inverse speed of how fast game advances, lower numbers give faster "frame rate"
-DELAY = 50
+DELAY = 0
 
 # this needs to be divisible by SNAKE_SPEED for grids to align properly
 GRID_SIZE = 400
@@ -72,6 +80,7 @@ def movep1(x, y):
     if x == p1aim.x or y == p1aim.y: return
     p1aim.x = x
     p1aim.y = y
+    print("Red TURN!")
 
 
 def movep2(x, y):
@@ -79,6 +88,7 @@ def movep2(x, y):
     if x == p2aim.x or y == p2aim.y: return
     p2aim.x = x
     p2aim.y = y
+    print("Blue TURN!")
 
 
 """ Checks if the given snakes head is within the playable grid bounds (GRID_SIZExGRID_SIZE)
@@ -90,11 +100,11 @@ def movep2(x, y):
 def draw(screen, t_red, t_blue, t_draw):
 
     # draw the head of each snake
-    t_draw.color("red")
-    draw_square(t_draw, p1xy.x, p1xy.y)
-
-    t_draw.color("blue")
-    draw_square(t_draw, p2xy.x, p2xy.y)
+    if GRAPHICS_ENABLE:
+        t_draw.color("red")
+        draw_square(t_draw, p1xy.x, p1xy.y)
+        t_draw.color("blue")
+        draw_square(t_draw, p2xy.x, p2xy.y)
 
     # increment the snake heads in the direction of their current aim
     p1xy.move(p1aim)
@@ -103,8 +113,9 @@ def draw(screen, t_red, t_blue, t_draw):
     p2head = p2xy.copy()
 
     # move the visual heads of each snake
-    t_red.setpos(p1xy.x, p1xy.y)
-    t_blue.setpos(p2xy.x, p2xy.y)
+    if GRAPHICS_ENABLE:
+        t_red.setpos(p1xy.x, p1xy.y)
+        t_blue.setpos(p2xy.x, p2xy.y)
 
     # alive flags
     red_alive = True
@@ -113,7 +124,6 @@ def draw(screen, t_red, t_blue, t_draw):
     # Check if Red died
     if p_bodies[p1head.x, p1head.y]:
         red_alive = False
-
     # Check if Blue Died
     if p_bodies[p2head.x, p2head.y]:
         blue_alive = False
@@ -124,91 +134,104 @@ def draw(screen, t_red, t_blue, t_draw):
         print("Tie!")
         print_grid(p_bodies)
         return
-
     elif not red_alive:
         print("Blue Wins!")
         print_grid(p_bodies)
         return
-
     elif not blue_alive:
         print("Red Wins!")
         print_grid(p_bodies)
         return
 
-    print(dist_west(p1head.x, p1head.y, p_bodies))
+    # print debug info
+    print(dist_totals(p1head, p2head, p1aim, p2aim, p_bodies))
 
     # Add the current players heads to the body array
     p_bodies[p1head.x, p1head.y] = True
     p_bodies[p2head.x, p2head.y] = True
 
     # update screen and goto next game state
-    screen.update()
+    if GRAPHICS_ENABLE:
+        screen.update()
+
     threading.Timer(DELAY * .001, draw, args=[screen, t_red, t_blue, t_draw]).start()
 
 
 def main():
 
-    # setup screen
-    screen = Screen()
-    screen.setup(WINDOW_SIZE, WINDOW_SIZE)
-    screen.screensize(GRID_SIZE, GRID_SIZE, "black")     # sets drawable area of the turtle
+    screen = t_red = t_blue = t_draw = None
 
-    # disable turtle drawing animation, screen.update() will be used to update screen
-    screen.tracer(False)
+    if GRAPHICS_ENABLE:
 
-    # setup turtles to draw with or display
-    mode("world")
-    setworldcoordinates(0, 0, GRID_SIZE, GRID_SIZE)
+        # setup screen
+        screen = Screen()
+        screen.setup(WINDOW_SIZE, WINDOW_SIZE)
+        screen.screensize(GRID_SIZE, GRID_SIZE, "black")     # sets drawable area of the turtle
 
-    # visual head of red
-    t_red = Turtle()
-    t_red.penup()
-    t_red.color("#FF6600")
-    t_red.shape("square")
-    t_red.shapesize(.4)
+        # disable turtle drawing animation, screen.update() will be used to update screen
+        screen.tracer(False)
 
-    # visual head of blue
-    t_blue = Turtle()
-    t_blue.penup()
-    t_blue.color("#00FFFF")
-    t_blue.shape("square")
-    t_blue.shapesize(.4)
+        # setup turtles to draw with or display
+        mode("world")
+        setworldcoordinates(0, 0, GRID_SIZE, GRID_SIZE)
 
-    # the turtle that actually draws
-    t_draw = Turtle()
-    t_draw.hideturtle()
-    t_draw.penup()
+        # visual head of red
+        t_red = Turtle()
+        t_red.penup()
+        t_red.color("#FF6600")
+        t_red.shape("square")
+        t_red.shapesize(.4)
 
-    # draw playable area border
-    t_draw.pensize(5)
-    t_draw.color("white")
-    t_draw.setpos(0,0)
-    t_draw.setheading(0)
-    t_draw.pendown()
-    t_draw.forward(GRID_SIZE)
-    t_draw.setheading(90)
-    t_draw.forward(GRID_SIZE-4)
-    t_draw.setheading(180)
-    t_draw.forward(GRID_SIZE)
-    t_draw.setheading(270)
-    t_draw.forward(GRID_SIZE-4)
-    t_draw.pensize(1)
+        # visual head of blue
+        t_blue = Turtle()
+        t_blue.penup()
+        t_blue.color("#00FFFF")
+        t_blue.shape("square")
+        t_blue.shapesize(.4)
+
+        # the turtle that actually draws
+        t_draw = Turtle()
+        t_draw.hideturtle()
+        t_draw.penup()
+
+        # draw playable area border
+        t_draw.pensize(5)
+        t_draw.color("white")
+        t_draw.setpos(0,0)
+        t_draw.setheading(0)
+        t_draw.pendown()
+        t_draw.forward(GRID_SIZE)
+        t_draw.setheading(90)
+        t_draw.forward(GRID_SIZE-4)
+        t_draw.setheading(180)
+        t_draw.forward(GRID_SIZE)
+        t_draw.setheading(270)
+        t_draw.forward(GRID_SIZE-4)
+        t_draw.pensize(1)
+
+    else:
+        # when not using graphics, create small screen
+        screen = Screen()
+        screen.setup(140, 50)
+
 
 
     # enable user input listening, this should be disabled once AI testing starts
     screen.listen()
 
     # Red Inputs, standard wsad controls for North South West East
-    screen.onkey(lambda: movep1(0, SNAKE_SPEED), 'w')
-    screen.onkey(lambda: movep1(0, -SNAKE_SPEED), 's')
-    screen.onkey(lambda: movep1(-SNAKE_SPEED, 0), 'a')
-    screen.onkey(lambda: movep1(SNAKE_SPEED, 0), 'd')
+    if not AI_RED:
+        screen.onkey(lambda: movep1(0, SNAKE_SPEED), 'w')
+        screen.onkey(lambda: movep1(0, -SNAKE_SPEED), 's')
+        screen.onkey(lambda: movep1(-SNAKE_SPEED, 0), 'a')
+        screen.onkey(lambda: movep1(SNAKE_SPEED, 0), 'd')
 
     # Blue Inputs, same as reds inputs but with ikjl (vim like)
-    screen.onkey(lambda: movep2(0, SNAKE_SPEED), 'i')
-    screen.onkey(lambda: movep2(0, -SNAKE_SPEED), 'k')
-    screen.onkey(lambda: movep2(-SNAKE_SPEED, 0), 'j')
-    screen.onkey(lambda: movep2(SNAKE_SPEED, 0), 'l')
+    if not AI_BLUE:
+        screen.onkey(lambda: movep2(0, SNAKE_SPEED), 'i')
+        screen.onkey(lambda: movep2(0, -SNAKE_SPEED), 'k')
+        screen.onkey(lambda: movep2(-SNAKE_SPEED, 0), 'j')
+        screen.onkey(lambda: movep2(SNAKE_SPEED, 0), 'l')
 
     # begin game state/draw loop
     draw(screen, t_red, t_blue, t_draw)
