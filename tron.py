@@ -7,37 +7,34 @@ from ai_inputs import *
 
 # when disabled, no turtle graphics are drawn, should be used when training AI
 GRAPHICS_ENABLE = True
-
 # toggles debugging printout (when someone turns, coordinate printout)
 DEBUG_TEXT = True
-
 # End Game printout toggle (ascii grid, winner)
 END_TEXT = True
-
 # controls if ai is enabled/ human controled
 # TODO: controls on who to set for each AI
 AI_RED = False
 AI_BLUE = False
 
+
 # speed as in distance traveled after each "frame"
 SNAKE_SPEED = 4
-
 # Number of milliseconds between a game state/frame advance
 # effectively inverse speed of how fast game advances, lower numbers give faster "frame rate"
 # speed of game is also impacted by turtle graphics and if dist funcs are calculated
 DELAY = 0
-
 # this needs to be divisible by SNAKE_SPEED for grids to align properly
 GRID_SIZE = 400
 WINDOW_SIZE = GRID_SIZE + 2
 
+
 # starting location of the snakes
 p1xy = vector(int(GRID_SIZE * .25), int(GRID_SIZE * .5))
 p2xy = vector(int(GRID_SIZE * .75), int(GRID_SIZE * .5))
-
 # starting direction of the snakes
 p1aim = vector(SNAKE_SPEED, 0)
 p2aim = vector(-SNAKE_SPEED, 0)
+
 
 # numpy 2d GRID_TIMES x GRID_TIMES array, prefilled with 0s
 # when a body piece is added its location is set to 1
@@ -77,7 +74,7 @@ def print_grid(grid):
     print(p1xy, p2xy)
 
 
-""" GAME INPUT FUNCTION
+""" GAME INPUT FUNCTIONS
     Updates the direction of the red snake
     Input: Vector of direction to move p1
 """
@@ -97,6 +94,7 @@ def movep2(x, y):
     if DEBUG_TEXT: print("Blue TURN!")
 
 
+# returns True if Red won, False if Blue won, and None if tie
 def draw(screen, t_red, t_blue, t_draw):
 
     # draw the head of each snake
@@ -134,17 +132,17 @@ def draw(screen, t_red, t_blue, t_draw):
         if END_TEXT:
             print("Tie!")
             print_grid(p_bodies)
-        return
+        return None
     elif not red_alive:
         if END_TEXT:
             print("Blue Wins!")
             print_grid(p_bodies)
-        return
+        return False
     elif not blue_alive:
         if END_TEXT:
             print("Red Wins!")
             print_grid(p_bodies)
-        return
+        return True
 
     # print debug info
     if DEBUG_TEXT: print(dist_totals(p1head, p2head, p1aim, p2aim, p_bodies))
