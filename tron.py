@@ -1,6 +1,4 @@
-"""
-    Tron, classic arcade game.
-"""
+"""Tron, a classic arcade game."""
 import threading
 from turtle import Screen, Turtle, done, mode, setworldcoordinates
 import numpy as np
@@ -10,15 +8,23 @@ from ai_inputs import *
 # when disabled, no turtle graphics are drawn, should be used when training AI
 GRAPHICS_ENABLE = True
 
+# toggles debugging printout (when someone turns, coordinate printout)
+DEBUG_TEXT = True
+
+# End Game printout toggle (ascii grid, winner)
+END_TEXT = True
+
 # controls if ai is enabled/ human controled
 # TODO: controls on who to set for each AI
 AI_RED = False
 AI_BLUE = False
 
+# speed as in distance traveled after each "frame"
 SNAKE_SPEED = 4
 
 # Number of milliseconds between a game state/frame advance
 # effectively inverse speed of how fast game advances, lower numbers give faster "frame rate"
+# speed of game is also impacted by turtle graphics and if dist funcs are calculated
 DELAY = 0
 
 # this needs to be divisible by SNAKE_SPEED for grids to align properly
@@ -80,7 +86,7 @@ def movep1(x, y):
     if x == p1aim.x or y == p1aim.y: return
     p1aim.x = x
     p1aim.y = y
-    print("Red TURN!")
+    if DEBUG_TEXT: print("Red TURN!")
 
 
 def movep2(x, y):
@@ -88,13 +94,7 @@ def movep2(x, y):
     if x == p2aim.x or y == p2aim.y: return
     p2aim.x = x
     p2aim.y = y
-    print("Blue TURN!")
-
-
-""" Checks if the given snakes head is within the playable grid bounds (GRID_SIZExGRID_SIZE)
-    Input: x,y coordinates of the given snakes head
-    Output: True if the snakes head is within GRID_SIZE bounds, False otherwise
-"""
+    if DEBUG_TEXT: print("Blue TURN!")
 
 
 def draw(screen, t_red, t_blue, t_draw):
@@ -131,20 +131,23 @@ def draw(screen, t_red, t_blue, t_draw):
     # end game if either player is dead or hit each other
     if p1head == p2head \
             or (not red_alive and not blue_alive):
-        print("Tie!")
-        print_grid(p_bodies)
+        if END_TEXT:
+            print("Tie!")
+            print_grid(p_bodies)
         return
     elif not red_alive:
-        print("Blue Wins!")
-        print_grid(p_bodies)
+        if END_TEXT:
+            print("Blue Wins!")
+            print_grid(p_bodies)
         return
     elif not blue_alive:
-        print("Red Wins!")
-        print_grid(p_bodies)
+        if END_TEXT:
+            print("Red Wins!")
+            print_grid(p_bodies)
         return
 
     # print debug info
-    print(dist_totals(p1head, p2head, p1aim, p2aim, p_bodies))
+    if DEBUG_TEXT: print(dist_totals(p1head, p2head, p1aim, p2aim, p_bodies))
 
     # Add the current players heads to the body array
     p_bodies[p1head.x, p1head.y] = True
@@ -159,7 +162,10 @@ def draw(screen, t_red, t_blue, t_draw):
 
 def main():
 
-    screen = t_red = t_blue = t_draw = None
+    screen = None
+    t_red = None
+    t_blue = None
+    t_draw = None
 
     if GRAPHICS_ENABLE:
 
@@ -210,11 +216,9 @@ def main():
         t_draw.pensize(1)
 
     else:
-        # when not using graphics, create small screen
+        # when not using graphics, create tiny screen
         screen = Screen()
         screen.setup(140, 50)
-
-
 
     # enable user input listening, this should be disabled once AI testing starts
     screen.listen()
@@ -226,7 +230,7 @@ def main():
         screen.onkey(lambda: movep1(-SNAKE_SPEED, 0), 'a')
         screen.onkey(lambda: movep1(SNAKE_SPEED, 0), 'd')
 
-    # Blue Inputs, same as reds inputs but with ikjl (vim like)
+    # Blue Inputs, same as reds inputs but with ikjl
     if not AI_BLUE:
         screen.onkey(lambda: movep2(0, SNAKE_SPEED), 'i')
         screen.onkey(lambda: movep2(0, -SNAKE_SPEED), 'k')
