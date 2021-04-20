@@ -1,9 +1,11 @@
 """Tron, a classic arcade game."""
-import threading
-from turtle import Screen, Turtle, done, mode, setworldcoordinates
+import time
+import turtle
 import numpy as np
 from freegames import vector
 from ai_inputs import *
+from enum import Enum
+
 
 # when disabled, no turtle graphics are drawn, should be used when training AI
 GRAPHICS_ENABLE = True
@@ -22,7 +24,7 @@ SNAKE_SPEED = 4
 # Number of milliseconds between a game state/frame advance
 # effectively inverse speed of how fast game advances, lower numbers give faster "frame rate"
 # speed of game is also impacted by turtle graphics and if dist funcs are calculated
-DELAY = 0
+DELAY = 20
 # this needs to be divisible by SNAKE_SPEED for grids to align properly
 GRID_SIZE = 400
 WINDOW_SIZE = GRID_SIZE + 2
@@ -43,8 +45,16 @@ p_bodies = np.zeros((GRID_SIZE, GRID_SIZE), dtype=bool)
 # add grid borders to p_bodies
 for col in range(len(p_bodies)):
     for row in range(len(p_bodies[col])):
-        if row == 0 or row == GRID_SIZE-4 or col == 0 or col == GRID_SIZE-4:  # check this, graphically it is correct
+        if row == 0 or row == GRID_SIZE-4 or col == 0 or col == GRID_SIZE-4:
             p_bodies[col][row] = True
+
+
+# enum status of the game
+class Game_State(Enum):
+    ongoing = 1
+    red_won = 2
+    blue_won = 3
+    tie = 4
 
 
 def draw_square(t, x, y):
@@ -94,7 +104,7 @@ def movep2(x, y):
     if DEBUG_TEXT: print("Blue TURN!")
 
 
-# returns True if Red won, False if Blue won, and None if tie
+# returns Game_State enum depending who won
 def draw(screen, t_red, t_blue, t_draw):
 
     # draw the head of each snake
@@ -127,22 +137,12 @@ def draw(screen, t_red, t_blue, t_draw):
         blue_alive = False
 
     # end game if either player is dead or hit each other
-    if p1head == p2head \
-            or (not red_alive and not blue_alive):
-        if END_TEXT:
-            print("Tie!")
-            print_grid(p_bodies)
-        return None
+    if p1head == p2head or (not red_alive and not blue_alive):
+        return Game_State.tie
     elif not red_alive:
-        if END_TEXT:
-            print("Blue Wins!")
-            print_grid(p_bodies)
-        return False
+        return Game_State.blue_won
     elif not blue_alive:
-        if END_TEXT:
-            print("Red Wins!")
-            print_grid(p_bodies)
-        return True
+        return Game_State.red_won
 
     # print debug info
     if DEBUG_TEXT: print(dist_totals(p1head, p2head, p1aim, p2aim, p_bodies))
@@ -155,7 +155,7 @@ def draw(screen, t_red, t_blue, t_draw):
     if GRAPHICS_ENABLE:
         screen.update()
 
-    threading.Timer(DELAY * .001, draw, args=[screen, t_red, t_blue, t_draw]).start()
+    return Game_State.ongoing
 
 
 def main():
@@ -168,7 +168,7 @@ def main():
     if GRAPHICS_ENABLE:
 
         # setup screen
-        screen = Screen()
+        screen = turtle.Screen()
         screen.setup(WINDOW_SIZE, WINDOW_SIZE)
         screen.screensize(GRID_SIZE, GRID_SIZE, "black")     # sets drawable area of the turtle
 
@@ -176,25 +176,25 @@ def main():
         screen.tracer(False)
 
         # setup turtles to draw with or display
-        mode("world")
-        setworldcoordinates(0, 0, GRID_SIZE, GRID_SIZE)
+        turtle.mode("world")
+        turtle.setworldcoordinates(0, 0, GRID_SIZE, GRID_SIZE)
 
         # visual head of red
-        t_red = Turtle()
+        t_red = turtle.Turtle()
         t_red.penup()
         t_red.color("#FF6600")
         t_red.shape("square")
         t_red.shapesize(.4)
 
         # visual head of blue
-        t_blue = Turtle()
+        t_blue = turtle.Turtle()
         t_blue.penup()
         t_blue.color("#00FFFF")
         t_blue.shape("square")
         t_blue.shapesize(.4)
 
         # the turtle that actually draws
-        t_draw = Turtle()
+        t_draw = turtle.Turtle()
         t_draw.hideturtle()
         t_draw.penup()
 
@@ -213,13 +213,14 @@ def main():
         t_draw.forward(GRID_SIZE-4)
         t_draw.pensize(1)
 
+    # if graphics disabled
     else:
         # when not using graphics, create tiny screen
-        screen = Screen()
+        screen = turtle.Screen()
         screen.setup(140, 50)
 
-    # enable user input listening, this should be disabled once AI testing starts
-    screen.listen()
+    # set focus to screen to get inputs if at least one human player
+    if not AI_RED or not AI_BLUE: screen.listen()
 
     # Red Inputs, standard wsad controls for North South West East
     if not AI_RED:
@@ -236,9 +237,28 @@ def main():
         screen.onkey(lambda: movep2(SNAKE_SPEED, 0), 'l')
 
     # begin game state/draw loop
-    draw(screen, t_red, t_blue, t_draw)
-    # keep window open after game finishes
-    done()
+    state = Game_State.ongoing
+    while state == Game_State.ongoing:
+        state = draw(screen, t_red, t_blue, t_draw)
+        time.sleep(DELAY * 0.001)
+
+    # run code here after game ends
+    print(state)
+
+    # disable user inputs after game ends
+    if not AI_RED:
+        screen.onkey(None, 'w')
+        screen.onkey(None, 's')
+        screen.onkey(None, 'a')
+        screen.onkey(None, 'd')
+    if not AI_BLUE:
+        screen.onkey(None, 'i')
+        screen.onkey(None, 'k')
+        screen.onkey(None, 'j')
+        screen.onkey(None, 'l')
+
+    # keep window open after game finishes only if graphics enabled (interactive)
+    if GRAPHICS_ENABLE: turtle.done()
 
 
 # this just tells python to run the main method
