@@ -2,6 +2,7 @@ import os
 from TronGame import TronGame
 import neat
 import turtle
+import random
 
 # create screen
 main_screen = turtle.Screen()
@@ -16,7 +17,6 @@ def run(config_file):
                                 config_file)
 
     # create population
-    # pop = neat.Population(config)
     pop = neat.population.Population(config)
 
     # enable stats output
@@ -24,8 +24,8 @@ def run(config_file):
     pop.add_reporter(neat.StatisticsReporter())
 
 
-    # begin training for 100 generations
-    winner = pop.run(eval_genomes, 100)
+    # begin training for 500 generations
+    winner = pop.run(eval_genomes, 500)
 
 
 # this function evaluates each genome, giving it a fitness value
@@ -45,8 +45,6 @@ def eval_genomes(genomes, config):
     # genomes is a list of genome_id's and genome's,
     for red_id, red_genome in genomes:
         for blue_id, blue_genome in genomes:
-            # skip if the current blue and red genome are the same
-            if red_id == blue_id: continue
 
             # create a neural network of the current genomes
             red_net = neat.nn.FeedForwardNetwork.create(red_genome, config)
@@ -54,8 +52,9 @@ def eval_genomes(genomes, config):
 
 
             # run the game
-            # graphically show the last 20 generations
-            if eval_genomes.gen > 80:
+            # graphically show the last 80 generations
+            if eval_genomes.gen > 150:
+
                 game = TronGame(graphics_enable=True, screen=main_screen, keep_window_open=False,
                                 ai_red_net=red_net, ai_blue_net=blue_net,
                                 debug_text=False, end_text=False, delay=0)
@@ -72,7 +71,7 @@ def eval_genomes(genomes, config):
             red_genome.fitness += game.get_fitness()[0]
             blue_genome.fitness += game.get_fitness()[1]
 
-
+# static variable
 eval_genomes.gen = 0
 
 # get config file path, then run neat

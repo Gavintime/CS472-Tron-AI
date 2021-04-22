@@ -11,10 +11,11 @@ for i in range(0, 100):
     print("Game Number: ", i+1)
     game = TronGame(graphics_enable=True,
                     screen=main_screen,
-                    keep_window_open=False,
+                    keep_window_open=True,
                     ai_red_net=None,
                     ai_blue_net=None,
-                    delay=30,
-                    debug_text=True)
+                    delay=900,
+                    debug_text=True,
+                    end_text=True)
     game.start_game()
     main_screen.clear()

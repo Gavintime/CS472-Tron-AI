@@ -8,6 +8,7 @@ from freegames import vector
 from ai_inputs import dist_totals
 from enum import Enum
 import copy
+import math
 
 
 class TronGame:
@@ -16,7 +17,7 @@ class TronGame:
     # speed as in distance traveled after each "frame"
     SNAKE_SPEED = 4
     # this needs to be divisible by SNAKE_SPEED for grids to align properly
-    GRID_SIZE = 400
+    GRID_SIZE = 100
     WINDOW_SIZE = GRID_SIZE + 2
 
     # enum class for game states
@@ -27,8 +28,8 @@ class TronGame:
         tie = 4
 
     # Default start location/directions
-    RED_LOC_DEFAULT = vector(int(GRID_SIZE * .25), int(GRID_SIZE * .5))
-    BLUE_LOC_DEFAULT = vector(int(GRID_SIZE * .75), int(GRID_SIZE * .5))
+    RED_LOC_DEFAULT = vector(20, 50)
+    BLUE_LOC_DEFAULT = vector(76, 50)
     RED_DIR_DEFAULT = vector(SNAKE_SPEED, 0)
     BLUE_DIR_DEFAULT = vector(-SNAKE_SPEED, 0)
 
@@ -36,7 +37,7 @@ class TronGame:
     P_BODIES_DEFAULT = np.zeros((GRID_SIZE, GRID_SIZE), dtype=bool)
     for col in range(len(P_BODIES_DEFAULT)):
         for row in range(len(P_BODIES_DEFAULT[col])):
-            if row == 0 or row == GRID_SIZE - 4 or col == 0 or col == GRID_SIZE - 4:
+            if row == 0 or row == GRID_SIZE - 2 or col == 0 or col == GRID_SIZE - 4:
                 P_BODIES_DEFAULT[col][row] = True
 
 
@@ -81,7 +82,7 @@ class TronGame:
         if self._graphics_enable:
 
             # (re)set screen
-            self._screen.screensize(400, 400, "black")  # sets drawable area of the turtle
+            self._screen.screensize(self.GRID_SIZE, self.GRID_SIZE, "black")  # sets drawable area of the turtle
             # disable turtle drawing animation for the screen
             self._screen.tracer(False)
 
@@ -147,6 +148,7 @@ class TronGame:
             time.sleep(self._delay * 0.001)
 
         # run code here after game ends
+        if self._end_text: print(self._state)
 
 
         # disable user inputs after game ends if in graphics mode, then keep window open
@@ -165,34 +167,38 @@ class TronGame:
             if self._keep_window_open: turtle.done()
 
 
+    def _head_dist(self):
+        return self.GRID_SIZE - math.dist(self._red_loc, self._blue_loc)
+
+
     # This returns the fitness of both players for a single game
     # TODO: actually implement a proper fitness function
     def get_fitness(self):
-        print(self._time)
         if self._state == self.GameState.tie:
-            return [0, 0]
+            return [-50, -50]
         elif self._state == self.GameState.red_won:
-            return [500 + self._time, 0]
+            return [500 + self._time, self._time]
         elif self._state == self.GameState.blue_won:
-            return [0, 500 + self._time]
+            return [self._time, 500 + self._time]
 
 
     def _update(self):
 
-        self._time += 1
-
-        # draw the head of each snake if graphics enabled
-        if self._graphics_enable:
-            self._t_draw.color("red")
-            self._draw_square(self._red_loc.x, self._red_loc.y)
-            self._t_draw.color("blue")
-            self._draw_square(self._blue_loc.x, self._blue_loc.y)
+        """PLACE SNAKE HEADS INTO BODY"""
+        self._p_bodies[self._red_loc.x, self._red_loc.y] = True
+        self._p_bodies[self._blue_loc.x, self._blue_loc.y] = True
 
 
-        # increment the snake heads in the direction of their current aim
-        self._red_loc.move(self._red_aim)
-        self._blue_loc.move(self._blue_aim)
-
+        """GET PERCEPTS FOR CURRENT GAME STATE"""
+        if self._debug_text:
+            print(self._time)
+            print(self._red_loc)
+            # self._print_grid()
+            print(dist_totals(self._red_loc, self._blue_loc,
+                              self._red_aim, self._blue_aim,
+                              self._p_bodies,
+                              self.GRID_SIZE,
+                              self.SNAKE_SPEED)[0])
 
         # generate percepts info for ai if enabled
         red_percepts, blue_percepts = None, None
@@ -202,34 +208,58 @@ class TronGame:
                                                       self._p_bodies,
                                                       self.GRID_SIZE,
                                                       self.SNAKE_SPEED)
-            # print(red_percepts, blue_percepts)
+            # print(red_percepts)
 
-        # get inputs from AI if enabled
+
+        """ASK AI WHAT DIRECTION TO MOVE"""
         # The AI takes the game state as an input,
         # the AI outputs the controls (game inputs) to be sent to the game
         if self._ai_red:
             red_controls = self._ai_red.activate(red_percepts)
             # print("red controls: ", red_controls)
-            if red_controls[0] >= 0.5: self._movep1(0, self.SNAKE_SPEED)
-            if red_controls[1] >= 0.5: self._movep1(0, -self.SNAKE_SPEED)
-            if red_controls[2] >= 0.5: self._movep1(-self.SNAKE_SPEED, 0)
-            if red_controls[3] >= 0.5: self._movep1(self.SNAKE_SPEED, 0)
+
+            red_max_output = max(red_controls)
+            if red_max_output == 0: pass
+            elif red_controls.index(red_max_output) == 0: self._movep1(0, self.SNAKE_SPEED)
+            elif red_controls.index(red_max_output) == 1: self._movep1(0, -self.SNAKE_SPEED)
+            elif red_controls.index(red_max_output) == 2: self._movep1(-self.SNAKE_SPEED, 0)
+            else: self._movep1(self.SNAKE_SPEED, 0)
 
         if self._ai_blue:
             blue_controls = self._ai_blue.activate(blue_percepts)
             # print("blue controls: ", blue_controls)
-            if blue_controls[0] >= 0.5: self._movep2(0, self.SNAKE_SPEED)
-            if blue_controls[1] >= 0.5: self._movep2(0, -self.SNAKE_SPEED)
-            if blue_controls[2] >= 0.5: self._movep2(-self.SNAKE_SPEED, 0)
-            if blue_controls[3] >= 0.5: self._movep2(self.SNAKE_SPEED, 0)
+            blue_max_output = max(blue_controls)
+            if blue_max_output == 0: pass
+            elif blue_controls.index(blue_max_output) == 0: self._movep2(0, self.SNAKE_SPEED)
+            elif blue_controls.index(blue_max_output) == 1: self._movep2(0, -self.SNAKE_SPEED)
+            elif blue_controls.index(blue_max_output) == 2: self._movep2(-self.SNAKE_SPEED, 0)
+            else: self._movep2(self.SNAKE_SPEED, 0)
 
 
-        # move the visual heads of each snake if graphics enabled
+        """ADVANCE SNAKE BASED ON GIVEN DIRECTION"""
+        self._red_loc.move(self._red_aim)
+        self._blue_loc.move(self._blue_aim)
+
+
+        """DRAW SNAKE HEAD AT NEW DIRECTION"""
+        # if snake runs into wall, we will see overlap
+        if self._graphics_enable:
+            self._t_draw.color("red")
+            self._draw_square(self._red_loc.x, self._red_loc.y)
+            self._t_draw.color("blue")
+            self._draw_square(self._blue_loc.x, self._blue_loc.y)
+
+        # move the visual heads of each snake
         if self._graphics_enable:
             self._t_red.setpos(self._red_loc.x, self._red_loc.y)
             self._t_blue.setpos(self._blue_loc.x, self._blue_loc.y)
 
+        # update screen
+        if self._graphics_enable:
+            self._screen.update()
 
+
+        """END GAME IF EITHER SNAKE DIED"""
         # alive flags
         red_alive = True
         blue_alive = True
@@ -249,29 +279,14 @@ class TronGame:
         elif not blue_alive:
             return self.GameState.red_won
 
-        # print debug info if enabled
-        if self._debug_text: print(dist_totals(self._red_loc, self._blue_loc,
-                                               self._red_aim, self._blue_aim,
-                                               self._p_bodies,
-                                               self.GRID_SIZE,
-                                               self.SNAKE_SPEED))
-
-        # Add the current players heads to the body array
-        self._p_bodies[self._red_loc.x, self._red_loc.y] = True
-        self._p_bodies[self._blue_loc.x, self._blue_loc.y] = True
-
-        # update screen and goto next game state
-        if self._graphics_enable:
-            self._screen.update()
-
-        # game is still ongoing, the loop will then call this function again incrementing the game state
+        """GOTO NEXT GAME TICK IF GAME HASN'T ENDED"""
         return self.GameState.ongoing
 
 
     def _draw_square(self, x, y):
         self._t_draw.penup()
         self._t_draw.setpos(x + 1, y + 1)
-        # self._t_draw.begin_fill()
+        self._t_draw.begin_fill()
         self._t_draw.setheading(0)
         self._t_draw.pendown()
         self._t_draw.forward(self.SNAKE_SPEED - 1)
@@ -281,12 +296,12 @@ class TronGame:
         self._t_draw.forward(self.SNAKE_SPEED - 1)
         self._t_draw.setheading(90)
         self._t_draw.forward(self.SNAKE_SPEED - 1)
-        # self._t_draw.end_fill()
+        self._t_draw.end_fill()
         self._t_draw.penup()
 
 
     def _print_grid(self):
-        for y in range(self.GRID_SIZE - 4, -1, -4):
+        for y in range(self.GRID_SIZE - 2, -4, -4):
             for x in range(0, self.GRID_SIZE, 4):
                 if self._p_bodies[x, y]:
                     print('0', end='')
@@ -297,16 +312,14 @@ class TronGame:
 
 
     def _movep1(self, x, y):
-        # ignore moves that go reverse
+        # ignore 180 degree directional changes
+        # 0 degree directional changes effectively do nothing as well
         if x == self._red_aim.x or y == self._red_aim.y: return
         self._red_aim.x = x
         self._red_aim.y = y
-        if self._debug_text: print("Red Turned!")
 
 
     def _movep2(self, x, y):
-        # ignore moves that go reverse
         if x == self._blue_aim.x or y == self._blue_aim.y: return
         self._blue_aim.x = x
         self._blue_aim.y = y
-        if self._debug_text: print("Blue Turned!")
