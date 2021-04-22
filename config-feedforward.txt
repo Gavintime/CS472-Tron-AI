@@ -8,7 +8,7 @@ fitness_threshold = 99999999
 no_fitness_termination = False
 
 # population settings
-pop_size = 100
+pop_size = 10
 reset_on_extinction = False
 
 
@@ -17,6 +17,10 @@ reset_on_extinction = False
 species_fitness_func = max
 max_stagnation = 15
 species_elitism = 2
+
+
+[DefaultSpeciesSet]
+compatibility_threshold = 3.0
 
 
 [DefaultReproduction]
@@ -47,7 +51,6 @@ bias_mutate_rate = 0.7
 bias_replace_rate = 0.1
 
 # genome compatibility options
-compatibility_threshold = 3.0
 compatibility_disjoint_coefficient = 1.0
 compatibility_weight_coefficient = 0.5
 

@@ -71,5 +71,5 @@ def dist_totals(r_cord, b_cord, r_aim, b_aim, p_bodies, grid_size, snake_speed):
     if b_aim.x <= 0: b_dists.append(b_west)
 
     # for each snake, return their distances from walls, as well as opponents min distance
-    return [r_north, r_south, r_east, r_west, min(b_dists)],\
-           [b_north, b_south, b_east, b_west, min(r_dists)]
+    return [min(3, r_north), min(3, r_south), min(3, r_east), min(3, r_west), min(3, min(b_dists))],\
+           [min(3, b_north), min(3, b_south), min(3, b_east), min(3, b_west), min(3, min(r_dists))]

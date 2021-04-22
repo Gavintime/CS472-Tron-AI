@@ -41,19 +41,18 @@ class TronGame:
 
 
     """
-        defaults are for training (no graphics, user input disabled
-        ai_red_enable and ai_blue_enable are ignored if graphics is disabled
+        defaults are for player v player, screen must be provided
     """
-    def __init__(self, graphics_enable=False,
-                 screen=None, keep_window_open=False,
-                 ai_red_enable=True, ai_blue_enable=True,
+    def __init__(self, graphics_enable=True,
+                 screen=None, keep_window_open=True,
+                 ai_red_net=None, ai_blue_net=None,
                  debug_text=False, end_text=False,
                  delay=20):
 
         """setup values for this game instance"""
         self._graphics_enable = graphics_enable
-        self._ai_red = ai_red_enable
-        self._ai_blue = ai_blue_enable
+        self._ai_red = ai_red_net
+        self._ai_blue = ai_blue_net
         self._debug_text = debug_text
         self._end_text = end_text
         self._delay = delay
@@ -73,6 +72,7 @@ class TronGame:
         self._t_draw = None
         # note, this should only be enabled if running a single instance of the game
         self._keep_window_open = keep_window_open
+        self._time = 0
 
 
     def start_game(self):
@@ -125,20 +125,20 @@ class TronGame:
             self._t_draw.pensize(1)
 
             # Enable inputs for red and blue if there is a player controller
-            if not self._ai_red:
+            if self._ai_red is None:
                 self._screen.onkey(lambda: self._movep1(0, self.SNAKE_SPEED), 'w')
                 self._screen.onkey(lambda: self._movep1(0, -self.SNAKE_SPEED), 's')
                 self._screen.onkey(lambda: self._movep1(-self.SNAKE_SPEED, 0), 'a')
                 self._screen.onkey(lambda: self._movep1(self.SNAKE_SPEED, 0), 'd')
 
-            if not self._ai_blue:
+            if self._ai_blue is None:
                 self._screen.onkey(lambda: self._movep2(0, self.SNAKE_SPEED), 'i')
                 self._screen.onkey(lambda: self._movep2(0, -self.SNAKE_SPEED), 'k')
                 self._screen.onkey(lambda: self._movep2(-self.SNAKE_SPEED, 0), 'j')
                 self._screen.onkey(lambda: self._movep2(self.SNAKE_SPEED, 0), 'l')
 
             # set focus to screen to get inputs if at least one human player
-            if not self._ai_red or not self._ai_blue: self._screen.listen()
+            if self._ai_red is None or self._ai_blue is None: self._screen.listen()
 
 
         # begin game state/draw loop
@@ -147,17 +147,16 @@ class TronGame:
             time.sleep(self._delay * 0.001)
 
         # run code here after game ends
-        #self._print_grid()
-        print(self._state)
+
 
         # disable user inputs after game ends if in graphics mode, then keep window open
         if self._graphics_enable:
-            if not self._ai_red:
+            if self._ai_red is None:
                 self._screen.onkey(None, 'w')
                 self._screen.onkey(None, 's')
                 self._screen.onkey(None, 'a')
                 self._screen.onkey(None, 'd')
-            if not self._ai_blue:
+            if self._ai_blue is None:
                 self._screen.onkey(None, 'i')
                 self._screen.onkey(None, 'k')
                 self._screen.onkey(None, 'j')
@@ -166,7 +165,21 @@ class TronGame:
             if self._keep_window_open: turtle.done()
 
 
+    # This returns the fitness of both players for a single game
+    # TODO: actually implement a proper fitness function
+    def get_fitness(self):
+        print(self._time)
+        if self._state == self.GameState.tie:
+            return [0, 0]
+        elif self._state == self.GameState.red_won:
+            return [500 + self._time, 0]
+        elif self._state == self.GameState.blue_won:
+            return [0, 500 + self._time]
+
+
     def _update(self):
+
+        self._time += 1
 
         # draw the head of each snake if graphics enabled
         if self._graphics_enable:
@@ -178,9 +191,37 @@ class TronGame:
 
         # increment the snake heads in the direction of their current aim
         self._red_loc.move(self._red_aim)
-        p1head = self._red_loc.copy()
         self._blue_loc.move(self._blue_aim)
-        p2head = self._blue_loc.copy()
+
+
+        # generate percepts info for ai if enabled
+        red_percepts, blue_percepts = None, None
+        if self._ai_red or self._ai_blue:
+            red_percepts, blue_percepts = dist_totals(self._red_loc, self._blue_loc,
+                                                      self._red_aim, self._blue_aim,
+                                                      self._p_bodies,
+                                                      self.GRID_SIZE,
+                                                      self.SNAKE_SPEED)
+            # print(red_percepts, blue_percepts)
+
+        # get inputs from AI if enabled
+        # The AI takes the game state as an input,
+        # the AI outputs the controls (game inputs) to be sent to the game
+        if self._ai_red:
+            red_controls = self._ai_red.activate(red_percepts)
+            # print("red controls: ", red_controls)
+            if red_controls[0] >= 0.5: self._movep1(0, self.SNAKE_SPEED)
+            if red_controls[1] >= 0.5: self._movep1(0, -self.SNAKE_SPEED)
+            if red_controls[2] >= 0.5: self._movep1(-self.SNAKE_SPEED, 0)
+            if red_controls[3] >= 0.5: self._movep1(self.SNAKE_SPEED, 0)
+
+        if self._ai_blue:
+            blue_controls = self._ai_blue.activate(blue_percepts)
+            # print("blue controls: ", blue_controls)
+            if blue_controls[0] >= 0.5: self._movep2(0, self.SNAKE_SPEED)
+            if blue_controls[1] >= 0.5: self._movep2(0, -self.SNAKE_SPEED)
+            if blue_controls[2] >= 0.5: self._movep2(-self.SNAKE_SPEED, 0)
+            if blue_controls[3] >= 0.5: self._movep2(self.SNAKE_SPEED, 0)
 
 
         # move the visual heads of each snake if graphics enabled
@@ -194,14 +235,14 @@ class TronGame:
         blue_alive = True
 
         # Check if Red died
-        if self._p_bodies[p1head.x, p1head.y]:
+        if self._p_bodies[self._red_loc.x, self._red_loc.y]:
             red_alive = False
         # Check if Blue Died
-        if self._p_bodies[p2head.x, p2head.y]:
+        if self._p_bodies[self._blue_loc.x, self._blue_loc.y]:
             blue_alive = False
 
         # end game if either player is dead or hit each other
-        if p1head == p2head or (not red_alive and not blue_alive):
+        if self._red_loc == self._blue_loc or (not red_alive and not blue_alive):
             return self.GameState.tie
         elif not red_alive:
             return self.GameState.blue_won
@@ -209,15 +250,15 @@ class TronGame:
             return self.GameState.red_won
 
         # print debug info if enabled
-        if self._debug_text: print(dist_totals(p1head, p2head,
+        if self._debug_text: print(dist_totals(self._red_loc, self._blue_loc,
                                                self._red_aim, self._blue_aim,
                                                self._p_bodies,
                                                self.GRID_SIZE,
                                                self.SNAKE_SPEED))
 
         # Add the current players heads to the body array
-        self._p_bodies[p1head.x, p1head.y] = True
-        self._p_bodies[p2head.x, p2head.y] = True
+        self._p_bodies[self._red_loc.x, self._red_loc.y] = True
+        self._p_bodies[self._blue_loc.x, self._blue_loc.y] = True
 
         # update screen and goto next game state
         if self._graphics_enable:
@@ -230,7 +271,7 @@ class TronGame:
     def _draw_square(self, x, y):
         self._t_draw.penup()
         self._t_draw.setpos(x + 1, y + 1)
-        self._t_draw.begin_fill()
+        # self._t_draw.begin_fill()
         self._t_draw.setheading(0)
         self._t_draw.pendown()
         self._t_draw.forward(self.SNAKE_SPEED - 1)
@@ -240,7 +281,7 @@ class TronGame:
         self._t_draw.forward(self.SNAKE_SPEED - 1)
         self._t_draw.setheading(90)
         self._t_draw.forward(self.SNAKE_SPEED - 1)
-        self._t_draw.end_fill()
+        # self._t_draw.end_fill()
         self._t_draw.penup()
 
 
