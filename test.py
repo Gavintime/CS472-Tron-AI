@@ -2,6 +2,7 @@ import os
 import pickle
 import neat
 import turtle
+from TronGame import TronGame
 
 # create screen
 main_screen = turtle.Screen()
