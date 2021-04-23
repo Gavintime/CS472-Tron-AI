@@ -4,8 +4,10 @@
 """ This function returns the distance between the given head and the closest wall (grid border or body) to the north
     Inputs: x,y coordinate of a snakes head
 """
+SIGHT = 4
+
 def _dist_north(x, y, p_bodies, grid_size, snake_speed):
-    dist = 3
+    dist = SIGHT
     for grid_y in range(y+snake_speed, grid_size, snake_speed):
         if p_bodies[x, grid_y] or dist == 0: break
         else: dist -= 1
@@ -13,7 +15,7 @@ def _dist_north(x, y, p_bodies, grid_size, snake_speed):
 
 
 def _dist_south(x, y, p_bodies, snake_speed):
-    dist = 3
+    dist = SIGHT
     for grid_y in range(y-snake_speed, -1, -snake_speed):
         if p_bodies[x, grid_y] or dist == 0: break
         else: dist -= 1
@@ -21,7 +23,7 @@ def _dist_south(x, y, p_bodies, snake_speed):
 
 
 def _dist_east(x, y, p_bodies, grid_size, snake_speed):
-    dist = 3
+    dist = SIGHT
     for grid_x in range(x+snake_speed, grid_size, snake_speed):
         if p_bodies[grid_x, y] or dist == 0: break
         else: dist -= 1
@@ -29,7 +31,7 @@ def _dist_east(x, y, p_bodies, grid_size, snake_speed):
 
 
 def _dist_west(x, y, p_bodies, snake_speed):
-    dist = 3
+    dist = SIGHT
     for grid_x in range(x-snake_speed, -1, -snake_speed):
         if p_bodies[grid_x, y] or dist == 0: break
         else: dist -= 1
@@ -44,7 +46,7 @@ blue's list(second list returned) [self_north, self_south, self_east, self_west,
 red gets blue's min dist to be used for "aggression" and vis versa for blue
 """
 def dist_totals(r_cord, b_cord, r_aim, b_aim, p_bodies, grid_size, snake_speed):
-    foresight = 3
+    foresight = SIGHT
 
     r_dists = []
     b_dists = []
