@@ -1,8 +1,9 @@
 import os
+import pickle
+
 from TronGame import TronGame
 import neat
 import turtle
-import random
 
 # create screen
 main_screen = turtle.Screen()
@@ -23,10 +24,12 @@ def run(config_file):
     pop.add_reporter(neat.StdOutReporter(True))
     pop.add_reporter(neat.StatisticsReporter())
 
-
     # begin training for 500 generations
-    winner = pop.run(eval_genomes, 500)
+    winner = pop.run(eval_genomes, 100)
 
+    with open("winner.pkl", "wb") as f:
+        pickle.dump(winner, f)
+        f.close()
 
 # this function evaluates each genome, giving it a fitness value
 # It does this by having it play tron against other genomes.
@@ -53,7 +56,7 @@ def eval_genomes(genomes, config):
 
             # run the game
             # graphically show the last 80 generations
-            if eval_genomes.gen > 150:
+            if eval_genomes.gen > 100:
 
                 game = TronGame(graphics_enable=True, screen=main_screen, keep_window_open=False,
                                 ai_red_net=red_net, ai_blue_net=blue_net,

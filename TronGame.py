@@ -127,16 +127,16 @@ class TronGame:
 
             # Enable inputs for red and blue if there is a player controller
             if self._ai_red is None:
-                self._screen.onkey(lambda: self._movep1(0, self.SNAKE_SPEED), 'w')
-                self._screen.onkey(lambda: self._movep1(0, -self.SNAKE_SPEED), 's')
-                self._screen.onkey(lambda: self._movep1(-self.SNAKE_SPEED, 0), 'a')
-                self._screen.onkey(lambda: self._movep1(self.SNAKE_SPEED, 0), 'd')
+                self._screen.onkeypress(lambda: self._movep1(0, self.SNAKE_SPEED), 'w')
+                self._screen.onkeypress(lambda: self._movep1(0, -self.SNAKE_SPEED), 's')
+                self._screen.onkeypress(lambda: self._movep1(-self.SNAKE_SPEED, 0), 'a')
+                self._screen.onkeypress(lambda: self._movep1(self.SNAKE_SPEED, 0), 'd')
 
             if self._ai_blue is None:
-                self._screen.onkey(lambda: self._movep2(0, self.SNAKE_SPEED), 'i')
-                self._screen.onkey(lambda: self._movep2(0, -self.SNAKE_SPEED), 'k')
-                self._screen.onkey(lambda: self._movep2(-self.SNAKE_SPEED, 0), 'j')
-                self._screen.onkey(lambda: self._movep2(self.SNAKE_SPEED, 0), 'l')
+                self._screen.onkeypress(lambda: self._movep2(0, self.SNAKE_SPEED), 'i')
+                self._screen.onkeypress(lambda: self._movep2(0, -self.SNAKE_SPEED), 'k')
+                self._screen.onkeypress(lambda: self._movep2(-self.SNAKE_SPEED, 0), 'j')
+                self._screen.onkeypress(lambda: self._movep2(self.SNAKE_SPEED, 0), 'l')
 
             # set focus to screen to get inputs if at least one human player
             if self._ai_red is None or self._ai_blue is None: self._screen.listen()
