@@ -9,22 +9,24 @@ main_screen = turtle.Screen()
 main_screen.setup(402, 402)
 
 
-def replay_genome(configPath, genome_path="winner.pkl"):
+def replay_genome(config_file, genome_path="winner.pkl"):
     # Load required NEAT config
     config = neat.config.Config(
         neat.DefaultGenome,
         neat.DefaultReproduction,
         neat.DefaultSpeciesSet,
         neat.DefaultStagnation,
-        configPath
+        config_file
     )
 
     # Unpickle the winner
     with open(genome_path, "rb") as f:
         genome = pickle.load(f)
-        
+
+    # create network from winner genome
     blue_net = neat.nn.FeedForwardNetwork.create(genome, config)
 
+    # play against genome as red
     while True:
         game = TronGame(graphics_enable=True,
                         screen=main_screen,

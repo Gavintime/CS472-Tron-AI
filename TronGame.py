@@ -41,9 +41,7 @@ class TronGame:
                 P_BODIES_DEFAULT[col][row] = True
 
 
-    """
-        defaults are for player v player, screen must be provided
-    """
+    # defaults are for player v player, screen must be provided
     def __init__(self, graphics_enable=True,
                  screen=None, keep_window_open=True,
                  ai_red_net=None, ai_blue_net=None,
@@ -141,6 +139,12 @@ class TronGame:
             # set focus to screen to get inputs if at least one human player
             if self._ai_red is None or self._ai_blue is None: self._screen.listen()
 
+        # draw starting square of each snake
+        if self._graphics_enable:
+            self._t_draw.color("red")
+            self._draw_square(self._red_loc.x, self._red_loc.y)
+            self._t_draw.color("blue")
+            self._draw_square(self._blue_loc.x, self._blue_loc.y)
 
         # begin game state/draw loop
         while self._state == self.GameState.ongoing:
@@ -167,50 +171,9 @@ class TronGame:
             if self._keep_window_open: turtle.done()
 
 
-    def _fitnessfuncwin(self, player):
-        return (500 + self._time/4
-                # + (self.GRID_SIZE - math.dist(self._red_loc, self._blue_loc))
-                + ((player % 2)*math.dist(self._red_loc, self.RED_LOC_DEFAULT))
-                + ((((player % 2) + 1) % 2)*math.dist(self._blue_loc, self.BLUE_LOC_DEFAULT))
-                - ((player % 2)*math.dist(vector(self.GRID_SIZE/2, self.GRID_SIZE/2), self._red_loc))
-                - ((((player % 2) + 1) % 2)*math.dist(vector(self.GRID_SIZE/2, self.GRID_SIZE/2), self._blue_loc)))
-
-    def _fitnessfunclose(self, player):
-        return 0-10*(((self.GRID_SIZE*self.GRID_SIZE/2) + self.GRID_SIZE/4) % (self.GRID_SIZE/2))+self._time/4
-
-
-    def get_fitness1(self):
-        red_hit_wall = self._red_loc[0] < 4 or self._red_loc[0] > 96 or self._red_loc[1] < 4 or self._red_loc[1] > 96
-        blue_hit_wall = self._blue_loc[0] < 4 or self._blue_loc[0] > 96 or self._blue_loc[1] < 4 or self._blue_loc[
-            1] > 96
-        if self._state == self.GameState.tie:
-            return [50, 50]
-        elif self._state == self.GameState.red_won:
-            if blue_hit_wall:
-                return [500 + self._time, self._time - 200]
-            return [2000 + self._time, self._time - 100]
-        elif self._state == self.GameState.blue_won:
-            if red_hit_wall:
-                return [self._time - 200, 500 + self._time]
-            return [self._time - 100, 2000 + self._time]
-
-    # This returns the fitness of both players for a single game
-    # TODO: actually implement a proper fitness function
-    def get_fitness2(self):
-        if self._state == self.GameState.tie:
-            return [self._time, self._time]
-        elif self._state == self.GameState.red_won:
-            return [self._fitnessfuncwin(1), self._fitnessfunclose(2)]
-        elif self._state == self.GameState.blue_won:
-            return [self._fitnessfunclose(1), self._fitnessfuncwin(2)]
-
-    def fit_sum(self):
-        fit1 = self.get_fitness1()
-        fit2 = self.get_fitness2()
-        fit_f = [fit1[0]+fit2[0],fit1[1]+fit2[1]]
-        return fit_f
-
     def _update(self):
+
+        self._time += 1
 
         """PLACE SNAKE HEADS INTO BODY"""
         self._p_bodies[self._red_loc.x, self._red_loc.y] = True
@@ -223,19 +186,15 @@ class TronGame:
             print(self._red_loc)
             # self._print_grid()
             print(dist_totals(self._red_loc, self._blue_loc,
-                              self._red_aim, self._blue_aim,
                               self._p_bodies,
-                              self.GRID_SIZE,
-                              self.SNAKE_SPEED)[0])
+                              self.GRID_SIZE, self.SNAKE_SPEED)[0])
 
         # generate percepts info for ai if enabled
         red_percepts, blue_percepts = None, None
         if self._ai_red or self._ai_blue:
             red_percepts, blue_percepts = dist_totals(self._red_loc, self._blue_loc,
-                                                      self._red_aim, self._blue_aim,
                                                       self._p_bodies,
-                                                      self.GRID_SIZE,
-                                                      self.SNAKE_SPEED)
+                                                      self.GRID_SIZE, self.SNAKE_SPEED)
             # print(red_percepts)
 
 
@@ -351,3 +310,81 @@ class TronGame:
         if x == self._blue_aim.x or y == self._blue_aim.y: return
         self._blue_aim.x = x
         self._blue_aim.y = y
+
+
+    """FITNESS FUNCTIONS"""
+
+    # calculate the winners fitness
+    def _fitness_alex_winner(self):
+
+        # base winning fitness and time spent alive
+        fitness = 500 + self._time / 4
+
+        # calculate fitness if red won
+        if self._state == self.GameState.red_won:
+            # add more fitness points equal to how far away from start they were
+            fitness += math.dist(self._red_loc, self.RED_LOC_DEFAULT)
+            # subtract fitness the farther away the winner is from the center
+            fitness -= math.dist((self.GRID_SIZE/2, self.GRID_SIZE/2), self._red_loc)
+
+        # calculate fitness if blue won
+        else:
+            fitness += math.dist(self._blue_loc, self.BLUE_LOC_DEFAULT)
+            fitness -= math.dist((self.GRID_SIZE / 2, self.GRID_SIZE / 2), self._blue_loc)
+
+        return fitness
+
+
+    # This gives fitness for lower based on the "quarter" of the game you're in?
+    def _fitness_alex_loser(self):
+        fitness = self._time / 4
+        fitness -= 10 * math.ceil((self._time * self._time) / 2 + self._time / 4) % math.ceil(self._time / 2)
+        return fitness
+
+
+    # calculate fitness based on time, winning points, and extra winning points if opposition ran into grid wall
+    def get_fitness_wojtek_wall(self):
+        # did red or blue die at a grid wall?
+        red_hit_wall = (self._red_loc[0] < 4 or self._red_loc[0] > 96
+                       or self._red_loc[1] < 4 or self._red_loc[1] > 96)
+        blue_hit_wall = (self._blue_loc[0] < 4 or self._blue_loc[0] > 96
+                        or self._blue_loc[1] < 4 or self._blue_loc[1] > 96)
+
+        # punish agents who tie (almost always from running into each other
+        if self._state == self.GameState.tie: return [-50, -50]
+
+        # red won, give extra 1500 points if blue ran into a grid wall
+        elif self._state == self.GameState.red_won:
+            return [2000 - (1500 * blue_hit_wall) + self._time, self._time - 200]
+
+        # blue won, give extra 1500 points if red ran into a grid wall
+        elif self._state == self.GameState.blue_won:
+            return [self._time - 200, 2000 - (1500 * red_hit_wall) + self._time]
+
+
+    # Calculate fitness using winner and loser functions
+    def get_fitness_alex_winner_loser(self):
+        # punish both of they tie (run into each other)
+        if self._state == self.GameState.tie: return [-50, -50]
+        elif self._state == self.GameState.red_won:
+            return [self._fitness_alex_winner(), self._fitness_alex_loser()]
+        elif self._state == self.GameState.blue_won:
+            return [self._fitness_alex_loser(), self._fitness_alex_winner()]
+
+
+    # calculate fitness using both wall and winner loser functions
+    def get_fitness_alex_wojtek_combined(self):
+        fit_wall = self.get_fitness_wojtek_wall()
+        fit_winner_loser = self.get_fitness_alex_winner_loser()
+        fit_combined = [fit_wall[0] + fit_winner_loser[0], fit_wall[1] + fit_winner_loser[1]]
+        return fit_combined
+
+
+    # this fitness function gives both players points for time alive, as well as 500 points for the winner
+    def get_fitness_basic(self):
+        if self._state == self.GameState.tie:
+            return [-50, -50]
+        elif self._state == self.GameState.red_won:
+            return [500 + self._time, self._time]
+        elif self._state == self.GameState.blue_won:
+            return [self._time, 500 + self._time]
