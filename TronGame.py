@@ -167,20 +167,48 @@ class TronGame:
             if self._keep_window_open: turtle.done()
 
 
-    def _head_dist(self):
-        return self.GRID_SIZE - math.dist(self._red_loc, self._blue_loc)
+    def _fitnessfuncwin(self, player):
+        return (500 + self._time/4
+                # + (self.GRID_SIZE - math.dist(self._red_loc, self._blue_loc))
+                + ((player % 2)*math.dist(self._red_loc, self.RED_LOC_DEFAULT))
+                + ((((player % 2) + 1) % 2)*math.dist(self._blue_loc, self.BLUE_LOC_DEFAULT))
+                - ((player % 2)*math.dist(vector(self.GRID_SIZE/2, self.GRID_SIZE/2), self._red_loc))
+                - ((((player % 2) + 1) % 2)*math.dist(vector(self.GRID_SIZE/2, self.GRID_SIZE/2), self._blue_loc)))
 
+    def _fitnessfunclose(self, player):
+        return 0-10*(((self.GRID_SIZE*self.GRID_SIZE/2) + self.GRID_SIZE/4) % (self.GRID_SIZE/2))+self._time/4
+
+
+    def get_fitness1(self):
+        red_hit_wall = self._red_loc[0] < 4 or self._red_loc[0] > 96 or self._red_loc[1] < 4 or self._red_loc[1] > 96
+        blue_hit_wall = self._blue_loc[0] < 4 or self._blue_loc[0] > 96 or self._blue_loc[1] < 4 or self._blue_loc[
+            1] > 96
+        if self._state == self.GameState.tie:
+            return [50, 50]
+        elif self._state == self.GameState.red_won:
+            if blue_hit_wall:
+                return [500 + self._time, self._time - 200]
+            return [2000 + self._time, self._time - 100]
+        elif self._state == self.GameState.blue_won:
+            if red_hit_wall:
+                return [self._time - 200, 500 + self._time]
+            return [self._time - 100, 2000 + self._time]
 
     # This returns the fitness of both players for a single game
     # TODO: actually implement a proper fitness function
-    def get_fitness(self):
+    def get_fitness2(self):
         if self._state == self.GameState.tie:
-            return [-50, -50]
+            return [self._time, self._time]
         elif self._state == self.GameState.red_won:
-            return [500 + self._time, self._time]
+            return [self._fitnessfuncwin(1), self._fitnessfunclose(2)]
         elif self._state == self.GameState.blue_won:
-            return [self._time, 500 + self._time]
+            return [self._fitnessfunclose(1), self._fitnessfuncwin(2)]
 
+    def fit_sum(self):
+        fit1 = self.get_fitness1()
+        fit2 = self.get_fitness2()
+        fit_f = [fit1[0]+fit2[0],fit1[1]+fit2[1]]
+        return fit_f
 
     def _update(self):
 
