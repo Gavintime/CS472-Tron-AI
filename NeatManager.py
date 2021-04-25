@@ -10,7 +10,9 @@ main_screen = turtle.Screen()
 main_screen.setup(402, 402)
 
 # number of generations to train
-GENERATIONS = 200
+GENERATIONS = 50
+
+small_gen = 10
 
 def run(config_file):
     # load config file into memory
@@ -26,14 +28,53 @@ def run(config_file):
 
     # begin training, second param is max generation number
 
-    winner = pop.run(eval_genomes, GENERATIONS)
+    # Trains one generation and saves it
+    winner1 = pop.run(eval_genomes, 1)
+
+    # Trains in increments of 10 generations and saves each one
+    winner10 = pop.run(eval_genomes, small_gen)
+
+    winner20 = pop.run(eval_genomes, small_gen)
+
+    winner30 = pop.run(eval_genomes, small_gen)
+
+    winner40 = pop.run(eval_genomes, small_gen)
+
+    winner50 = pop.run(eval_genomes, small_gen)
+
+    # Trains for a final 50 generations and saves it
+    winnerALL = pop.run(eval_genomes, GENERATIONS)
+
+
 
     # after end of training, store best fit to file
-    # TODO: store the top 5? fit agents to a file?
-    with open("winner.pkl", "wb") as f:
-        pickle.dump(winner, f)
+    with open("winnerALL.pkl", "wb") as f:
+        pickle.dump(winnerALL, f)  # change to pop if you want best in generation
         f.close()
 
+    with open("winner1.pkl", "wb") as f:
+        pickle.dump(winner1, f)
+        f.close()
+
+    with open("winner10.pkl", "wb") as f:
+        pickle.dump(winner10, f)
+        f.close()
+
+    with open("winner20.pkl", "wb") as f:
+        pickle.dump(winner20, f)
+        f.close()
+
+    with open("winner30.pkl", "wb") as f:
+        pickle.dump(winner30, f)
+        f.close()
+
+    with open("winner40.pkl", "wb") as f:
+        pickle.dump(winner40, f)
+        f.close()
+
+    with open("winner50.pkl", "wb") as f:
+        pickle.dump(winner50, f)
+        f.close()
 
 # this function evaluates each genome, giving it a fitness value
 # It does this by having it play tron against other genomes.
@@ -63,7 +104,7 @@ def eval_genomes(genomes, config):
 
             # run the game
             # graphically show the last 80 generations
-            if eval_genomes.gen >= GENERATIONS:
+            if eval_genomes.gen > 100:
 
                 game = TronGame(graphics_enable=True, screen=main_screen, keep_window_open=False,
                                 ai_red_net=red_net, ai_blue_net=blue_net,

@@ -9,7 +9,7 @@ main_screen = turtle.Screen()
 main_screen.setup(402, 402)
 
 
-def replay_genome(config_file, genome_path="winner.pkl"):
+def replay_genome(config_file, genome_path="winnerALL.pkl"): # change the file name to which generation you want to play
     # Load required NEAT config
     config = neat.config.Config(
         neat.DefaultGenome,
