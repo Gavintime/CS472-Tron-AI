@@ -335,9 +335,24 @@ class TronGame:
         return fitness
 
 
-    # Higher fitness over time but losing always provides a penalty
+    # Calculate fitness for loser, the longer the game lasts the less the loser "loses" fitness
     def _fitness_alex_loser(self):
-        fitness = -20 * math.ceil(((self.GRID_SIZE * self.GRID_SIZE) / 2) - math.ceil(self._time / 6))
+
+        # scalar for how much fitness should be subtracted from the loser
+        fitness_scalar = 20
+        # scalar that determines the fraction of game time subtracted from max time
+        # 1 = time is used without scaling
+        # larger values make time worth less, smaller values make game time worth more
+        time_scalar = 6
+
+        # get the maximum time a game can last. Each snake (2 total) takes up one additional grid space per game tick.
+        max_time = math.ceil((self.GRID_SIZE * self.GRID_SIZE) / 2)
+
+        # the amount of time in theory that went unused
+        unused_time = max_time - math.ceil(self._time / time_scalar)
+
+        # scale the unused time and return it as a negative value since larger numbers mean worse agents
+        fitness = -fitness_scalar * unused_time
         return fitness
 
 
@@ -345,9 +360,9 @@ class TronGame:
     def get_fitness_wojtek_wall(self):
         # did red or blue die at a grid wall?
         red_hit_wall = (self._red_loc[0] < 4 or self._red_loc[0] > 96
-                       or self._red_loc[1] < 4 or self._red_loc[1] > 96)
+                        or self._red_loc[1] < 4 or self._red_loc[1] > 96)
         blue_hit_wall = (self._blue_loc[0] < 4 or self._blue_loc[0] > 96
-                        or self._blue_loc[1] < 4 or self._blue_loc[1] > 96)
+                         or self._blue_loc[1] < 4 or self._blue_loc[1] > 96)
 
         # punish agents who tie (almost always from running into each other
         if self._state == self.GameState.tie: return [-50, -50]
@@ -360,13 +375,14 @@ class TronGame:
         elif self._state == self.GameState.blue_won:
             return [self._time - 200, 2000 + (1500 * red_hit_wall) + self._time]
 
-    # This function is the same as wojtek's but punishes the loser instead of rewarding the winner when they hit a wall.
+
+    # This function is the same as Wojtek's but punishes the loser instead of rewarding the winner when they hit a wall.
     def get_fitness_wojtek_wall_updated(self):
         # did red or blue die at a grid wall?
         red_hit_wall = (self._red_loc[0] < 4 or self._red_loc[0] > 96
-                       or self._red_loc[1] < 4 or self._red_loc[1] > 96)
+                        or self._red_loc[1] < 4 or self._red_loc[1] > 96)
         blue_hit_wall = (self._blue_loc[0] < 4 or self._blue_loc[0] > 96
-                        or self._blue_loc[1] < 4 or self._blue_loc[1] > 96)
+                         or self._blue_loc[1] < 4 or self._blue_loc[1] > 96)
 
         # punish agents who tie (almost always from running into each other
         if self._state == self.GameState.tie: return [-50, -50]
@@ -406,3 +422,10 @@ class TronGame:
             return [500 + self._time, self._time]
         elif self._state == self.GameState.blue_won:
             return [self._time, 500 + self._time]
+
+
+    # this fitness function only rewards the winner 500 points, and give no points based on time spent alive
+    def get_fitness_no_time(self):
+        if self._state == self.GameState.tie: return [-50, -50]
+        elif self._state == self.GameState.red_won: return [500, 0]
+        elif self._state == self.GameState.blue_won: return [0, 500]
