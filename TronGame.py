@@ -364,16 +364,25 @@ class TronGame:
         blue_hit_wall = (self._blue_loc[0] < 4 or self._blue_loc[0] > 96
                          or self._blue_loc[1] < 4 or self._blue_loc[1] > 96)
 
+        # penalty for ties
+        tie_penalty = 50
+        # points for winning, awarded to winner
+        base_win_points = 2000
+        # points deducted for loss, taken from loser
+        base_loss_points = 200
+        # points bonus for opponent colliding with grid wall
+        points_wall_collision = 1500
+
         # punish agents who tie (almost always from running into each other
-        if self._state == self.GameState.tie: return [-50, -50]
+        if self._state == self.GameState.tie: return [-tie_penalty, -tie_penalty]
 
         # red won, give extra 1500 points if blue ran into a grid wall
         elif self._state == self.GameState.red_won:
-            return [2000 + (1500 * blue_hit_wall) + self._time, self._time - 200]
+            return [base_win_points + (points_wall_collision * blue_hit_wall) + self._time, self._time - base_loss_points]
 
         # blue won, give extra 1500 points if red ran into a grid wall
         elif self._state == self.GameState.blue_won:
-            return [self._time - 200, 2000 + (1500 * red_hit_wall) + self._time]
+            return [self._time - base_loss_points, base_win_points + (base_loss_points * red_hit_wall) + self._time]
 
 
     # This function is the same as Wojtek's but punishes the loser instead of rewarding the winner when they hit a wall.
@@ -384,22 +393,32 @@ class TronGame:
         blue_hit_wall = (self._blue_loc[0] < 4 or self._blue_loc[0] > 96
                          or self._blue_loc[1] < 4 or self._blue_loc[1] > 96)
 
+        # penalty for ties
+        tie_penalty = 50
+        # points for winning, awarded to winner
+        base_win_points = 2000
+        # points deducted for loss, taken from loser
+        base_loss_points = 200
+        # points deduction for colliding with grid wall
+        points_wall_collision = 1500
+
         # punish agents who tie (almost always from running into each other
-        if self._state == self.GameState.tie: return [-50, -50]
+        if self._state == self.GameState.tie: return [-tie_penalty, -tie_penalty]
 
         # red won, punish blue for hitting wall
         elif self._state == self.GameState.red_won:
-            return [2000 + self._time, self._time - 200 - (1500 * blue_hit_wall)]
+            return [base_win_points + self._time, self._time - base_loss_points - (points_wall_collision * blue_hit_wall)]
 
         # blue won, punish red for hitting wall
         elif self._state == self.GameState.blue_won:
-            return [self._time - 200 - (1500 * red_hit_wall), 2000 + self._time]
+            return [self._time - base_loss_points - (points_wall_collision * red_hit_wall), base_win_points + self._time]
 
 
     # Calculate fitness using winner and loser functions
     def get_fitness_alex_winner_loser(self):
         # punish both of they tie (run into each other)
-        if self._state == self.GameState.tie: return [-50, -50]
+        tie_penalty = 50
+        if self._state == self.GameState.tie: return [-tie_penalty, -tie_penalty]
         elif self._state == self.GameState.red_won:
             return [self._fitness_alex_winner(), self._fitness_alex_loser()]
         elif self._state == self.GameState.blue_won:
