@@ -335,10 +335,9 @@ class TronGame:
         return fitness
 
 
-    # This gives fitness for lower based on the "quarter" of the game you're in?
+    # Higher fitness over time but losing always provides a penalty
     def _fitness_alex_loser(self):
-        fitness = self._time / 4
-        fitness -= 10 * math.ceil((self._time * self._time) / 2 + self._time / 4) % math.ceil(self._time / 2)
+        fitness = -20 * math.ceil(((self.GRID_SIZE * self.GRID_SIZE) / 2) - math.ceil(self._time / 6))
         return fitness
 
 
@@ -355,11 +354,30 @@ class TronGame:
 
         # red won, give extra 1500 points if blue ran into a grid wall
         elif self._state == self.GameState.red_won:
-            return [2000 - (1500 * blue_hit_wall) + self._time, self._time - 200]
+            return [2000 + (1500 * blue_hit_wall) + self._time, self._time - 200]
 
         # blue won, give extra 1500 points if red ran into a grid wall
         elif self._state == self.GameState.blue_won:
-            return [self._time - 200, 2000 - (1500 * red_hit_wall) + self._time]
+            return [self._time - 200, 2000 + (1500 * red_hit_wall) + self._time]
+
+    # This function is the same as wojtek's but punishes the loser instead of rewarding the winner when they hit a wall.
+    def get_fitness_wojtek_wall_updated(self):
+        # did red or blue die at a grid wall?
+        red_hit_wall = (self._red_loc[0] < 4 or self._red_loc[0] > 96
+                       or self._red_loc[1] < 4 or self._red_loc[1] > 96)
+        blue_hit_wall = (self._blue_loc[0] < 4 or self._blue_loc[0] > 96
+                        or self._blue_loc[1] < 4 or self._blue_loc[1] > 96)
+
+        # punish agents who tie (almost always from running into each other
+        if self._state == self.GameState.tie: return [-50, -50]
+
+        # red won, punish blue for hitting wall
+        elif self._state == self.GameState.red_won:
+            return [2000 + self._time, self._time - 200 - (1500 * blue_hit_wall)]
+
+        # blue won, punish red for hitting wall
+        elif self._state == self.GameState.blue_won:
+            return [self._time - 200 - (1500 * red_hit_wall), 2000 + self._time]
 
 
     # Calculate fitness using winner and loser functions

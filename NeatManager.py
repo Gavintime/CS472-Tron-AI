@@ -10,7 +10,7 @@ main_screen = turtle.Screen()
 main_screen.setup(402, 402)
 
 # number of generations to train
-GENERATIONS = 50
+GENERATIONS = 200
 
 def run(config_file):
     # load config file into memory
@@ -78,8 +78,8 @@ def eval_genomes(genomes, config):
                 game.start_game()
 
             # add to the genomes fitness
-            red_genome.fitness += game.get_fitness_wojtek_wall()[0]
-            blue_genome.fitness += game.get_fitness_wojtek_wall()[1]
+            red_genome.fitness += game.get_fitness_wojtek_wall_updated()[0]
+            blue_genome.fitness += game.get_fitness_wojtek_wall_updated()[1]
 
     # divide fitness by the number of games played
     for _, genome in genomes:
