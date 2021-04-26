@@ -102,7 +102,7 @@ def eval_genomes(genomes, config):
 
             # run the game
             # graphically show the last however many generations
-            if eval_genomes.gen > (small_gen * 5) + GENERATIONS + 1:  # calculation: total number of generations ran
+            if eval_genomes.gen > (small_gen * 5) + GENERATIONS:  # calculation: total number of generations ran
 
                 game = TronGame(graphics_enable=True, screen=main_screen, keep_window_open=False,
                                 ai_red_net=red_net, ai_blue_net=blue_net,
@@ -116,9 +116,38 @@ def eval_genomes(genomes, config):
                                 debug_text=False, end_text=False, delay=0)
                 game.start_game()
 
-            # add to the genomes fitness
+            #The following adds the per game fitness to the agents total fitness over all games
+
+            """
+                CHOOSE FITNESS FUNCTION
+                Each 2 line segment designates a fitness function to use,
+                only comment out one 2 line segment at a time.
+            """
+            # calculate fitness based on time, winning points, and extra winning points if opposition ran into grid wall
+            # red_genome.fitness += game.get_fitness_wojtek_wall()[0]
+            # blue_genome.fitness += game.get_fitness_wojtek_wall()[1]
+
+            # This function is the same as Wojtek's but punishes the loser instead of rewarding the winner when they hit a wall.
             red_genome.fitness += game.get_fitness_wojtek_wall_updated()[0]
             blue_genome.fitness += game.get_fitness_wojtek_wall_updated()[1]
+
+            # Calculate fitness using winner and loser functions, see TronGame.py for more info
+            # red_genome.fitness += game.get_fitness_alex_winner_loser()[0]
+            # blue_genome.fitness += game.get_fitness_alex_winner_loser()[1]
+
+            # calculate fitness using both wall and winner loser functions
+            # red_genome.fitness += game.get_fitness_alex_wojtek_combined()[0]
+            # blue_genome.fitness += game.get_fitness_alex_wojtek_combined()[1]
+
+            # this fitness function gives both players points for time alive, as well as 500 points for the winner
+            # red_genome.fitness += game.get_fitness_basic()[0]
+            # blue_genome.fitness += game.get_fitness_basic()[1]
+
+            # this fitness function only rewards the winner 500 points, and give no points based on time spent alive
+            # red_genome.fitness += game.get_fitness_no_time()[0]
+            # blue_genome.fitness += game.get_fitness_no_time()[1]
+
+
 
     # divide fitness by the number of games played
     for _, genome in genomes:
