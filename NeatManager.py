@@ -45,8 +45,6 @@ def run(config_file):
     # Trains for a final 50 generations and saves it
     winnerALL = pop.run(eval_genomes, GENERATIONS)
 
-
-
     # after end of training, store best fit to file
     with open("winnerALL.pkl", "wb") as f:
         pickle.dump(winnerALL, f)  # change to pop if you want best in generation
@@ -103,8 +101,8 @@ def eval_genomes(genomes, config):
 
 
             # run the game
-            # graphically show the last 80 generations
-            if eval_genomes.gen > 100:
+            # graphically show the last however many generations
+            if eval_genomes.gen > (small_gen * 5) + GENERATIONS + 1:  # calculation: total number of generations ran
 
                 game = TronGame(graphics_enable=True, screen=main_screen, keep_window_open=False,
                                 ai_red_net=red_net, ai_blue_net=blue_net,
@@ -125,6 +123,7 @@ def eval_genomes(genomes, config):
     # divide fitness by the number of games played
     for _, genome in genomes:
         genome.fitness /= (len(genomes) - 1)*2
+
 
 # static variable
 eval_genomes.gen = 0
